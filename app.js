@@ -219,7 +219,7 @@ document.querySelectorAll("#mainNav a").forEach(a=>a.addEventListener("click",()
   const budget=String(text).match(/(?:necesidades|gastos personales|deseos|ahorro)[^\n]{0,100}?(?:C\$|C\\\$)\s*([\d,]+(?:\.\d+)?)/ig);
   if(/presupuesto|distribuci[oó]n del salario|regla 50\/30\/20/i.test(text)&&budget&&budget.length>=2){
    const values=[];
-   budget.forEach((match)=>{const label=match.match(/^(?:\\d+[.)]\\s*)?(?:\\*\\*)?(necesidades|gastos personales|deseos|ahorro)/i)?.[1];const amount=match.match(/(?:C\$|C\\\$)\s*([\d,]+(?:\.\d+)?)/i)?.[1];if(label&&amount&&!values.some(v=>v.label.toLowerCase()===label.toLowerCase()))values.push({label:label.charAt(0).toUpperCase()+label.slice(1),amount:amount.replace(/,/g,"")});});
+   budget.forEach((match)=>{const label=match.match(/^(?:\d+[.)]\s*)?(?:\*\*)?(necesidades|gastos personales|deseos|ahorro)/i)?.[1];const amount=match.match(/(?:C\$|C\\\$)\s*([\d,]+(?:\.\d+)?)/i)?.[1];if(label&&amount&&!values.some(v=>v.label.toLowerCase()===label.toLowerCase()))values.push({label:label.charAt(0).toUpperCase()+label.slice(1),amount:amount.replace(/,/g,"")});});
    if(values.length>=2){const grid=document.createElement("div");grid.className="budget-visual";values.slice(0,4).forEach(v=>{const card=document.createElement("div");card.className="budget-visual-card";const label=document.createElement("span");label.textContent=v.label;const amount=document.createElement("strong");amount.textContent=new Intl.NumberFormat("es-NI",{style:"currency",currency:"NIO",maximumFractionDigits:0}).format(Number(v.amount));card.append(label,amount);grid.appendChild(card);});bubble.appendChild(grid);}
   }
   row.append(avatar,bubble);

@@ -18,7 +18,7 @@ function checkRateLimit(req) {
   return entry.count <= MAX_REQUESTS_PER_WINDOW;
 }
 function systemPrompt() {
-  return "Eres el tutor educativo de Mundo Finanzas, una plataforma en español para aprender contabilidad y finanzas personales, con ejemplos en córdobas nicaragüenses (C$). Explica con claridad, estructura y ejemplos sencillos. Si calculas, muestra la fórmula y los pasos. No afirmes que eres asesor financiero profesional, no prometas rendimientos ni recomiendes inversiones personalizadas. La información es educativa. No solicites contraseñas, números de tarjetas, cuentas bancarias ni otros datos sensibles. Si la pregunta no trata de finanzas, contabilidad, educación o tecnología relacionada, responde brevemente y vuelve a orientar al aprendizaje.";
+  return "Eres el tutor educativo de Mundo Finanzas, una plataforma en español para aprender contabilidad y finanzas personales, con ejemplos en córdobas nicaragüenses (C$). Responde directamente a la pregunta más reciente y usa el historial para entender referencias como eso, ellos o ¿para qué sirve?. No vuelvas a saludar en cada respuesta salvo que el usuario salude. Explica con claridad y ejemplos cotidianos. Para cálculos, muestra la fórmula y los pasos, verifica las operaciones y termina todos los ejemplos numéricos. Procura respuestas completas y concisas, normalmente de 2 a 6 párrafos, sin cortar frases ni operaciones. No afirmes que eres asesor financiero profesional, no prometas rendimientos ni recomiendes inversiones personalizadas. La información es educativa. No solicites contraseñas, números de tarjetas, cuentas bancarias ni otros datos sensibles. Si la pregunta no trata de finanzas, contabilidad, educación o tecnología relacionada, responde brevemente y vuelve a orientar al aprendizaje.";
 }
 async function callGemini(messages) {
   const key = process.env.GEMINI_API_KEY;
@@ -27,7 +27,7 @@ async function callGemini(messages) {
   const contents = messages.map(m => ({ role: m.role === "assistant" ? "model" : "user", parts: [{ text: m.content }] }));
   const response = await fetch("https://generativelanguage.googleapis.com/v1beta/models/" + encodeURIComponent(model) + ":generateContent?key=" + encodeURIComponent(key), {
     method: "POST", headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ systemInstruction: { parts: [{ text: systemPrompt() }] }, contents, generationConfig: { temperature: 0.5, maxOutputTokens: 700 } })
+    body: JSON.stringify({ systemInstruction: { parts: [{ text: systemPrompt() }] }, contents, generationConfig: { temperature: 0.5, maxOutputTokens: 1800 } })
   });
   const data = await response.json().catch(() => ({}));
   if (!response.ok) { const err = new Error(data.error?.message || "Error del proveedor Gemini."); err.status = response.status; throw err; }
@@ -53,7 +53,13 @@ async function callOpenAICompatible(provider, messages) {
   return reply.trim();
 }
 module.exports = async function handler(req, res) {
-  res.setHeader("Access-Control-Allow-Origin", process.env.ALLOWED_ORIGIN || "*");
+  const origin = req.headers.origin || "";
+  const configuredOrigin = (process.env.ALLOWED_ORIGIN || "").replace(/\/$/, "");
+  const knownOrigin = origin === "https://mundo-finanzas-seven.vercel.app" ||
+    origin === "https://josegarcia6.github.io" ||
+    /^https:\/\/mundo-finanzas(?:-[a-z0-9-]+)?\.vercel\.app$/i.test(origin);
+  const allowedOrigin = origin && (origin.replace(/\/$/, "") === configuredOrigin || knownOrigin);
+  if (allowedOrigin) res.setHeader("Access-Control-Allow-Origin", origin);
   res.setHeader("Vary", "Origin");
   res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
   res.setHeader("Access-Control-Allow-Headers", "Content-Type");
@@ -76,6 +82,11 @@ module.exports = async function handler(req, res) {
     else return json(res, 500, { error: "AI_PROVIDER debe ser gemini, groq u openrouter." });
     return json(res, 200, { reply, provider });
   } catch (error) {
+    console.error("[api/chat] Provider request failed:", {
+      provider,
+      status: error.status || null,
+      message: error.message || "Unknown provider error"
+    });
     const status = error.status === 429 ? 429 : error.status === 400 ? 400 : 502;
     return json(res, status, { error: status === 429 ? "La cuota del proveedor está temporalmente limitada." : "La IA no está disponible temporalmente. " + (process.env.NODE_ENV === "development" ? error.message : "Intenta más tarde.") });
   }

@@ -35,3 +35,22 @@
 .budget-meter{height:6px;background:#e4eee7;border-radius:999px;overflow:hidden}.budget-meter-fill{height:100%;background:var(--green);border-radius:999px}.budget-visual-card small{font-size:10px;color:var(--muted)}
 
 .inline-source-link{color:var(--green);text-decoration:underline;text-underline-offset:2px;overflow-wrap:anywhere}.inline-source-link:hover{opacity:.78}
+
+
+/* Accesibilidad y estados claros del tutor */
+:focus-visible{outline:3px solid #e29a54;outline-offset:3px}
+button:disabled{cursor:not-allowed}
+.chat-input input:focus-visible,.sim-form input:focus-visible,.mf-form input:focus-visible,.mf-form select:focus-visible{outline:3px solid #9acbb0;outline-offset:1px}
+.chat-header small{line-height:1.5}
+.chat-footnote{line-height:1.6;padding-top:5px;overflow-wrap:anywhere}
+.message.bot .bubble{overflow-wrap:anywhere}
+.message .bubble a{overflow-wrap:anywhere}
+.chat-messages{overscroll-behavior:contain;scrollbar-gutter:stable}
+.chat-input button{transition:background .2s,transform .2s}
+.chat-input button:hover:not(:disabled){background:#105542;transform:translateY(-1px)}
+.chat-input button:focus-visible,.clear-chat:focus-visible,.quick-prompts button:focus-visible,.quiz-option:focus-visible{outline:3px solid #e29a54;outline-offset:2px}
+.source-checked-at{display:block;line-height:1.5;overflow-wrap:anywhere}
+.search-note{background:#fff8e9;border:1px solid #f0dfb7;border-radius:8px;padding:10px 12px}
+.answer-table-wrap{overscroll-behavior-x:contain}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{scroll-behavior:auto!important;animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}}
+@media(max-width:420px){.chat-header{padding:14px}.chat-messages{padding:13px}.chat-input{padding:10px;gap:7px}.chat-input input{padding:10px;font-size:12px}.source-card{padding-right:30px}.assistant-rich .answer-heading{font-size:13px}}

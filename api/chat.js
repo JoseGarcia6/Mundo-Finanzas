@@ -27,26 +27,33 @@ function needsWebSearch(messages) {
 function historyForOpenAI(messages) {
   return [{ role: "system", content: systemPrompt() }, ...messages];
 }
-async function tavilySearch(query) {
-  const key = process.env.TAVILY_API_KEY;
-  if (!key) return null;
-  const response = await fetch("https://api.tavily.com/search", {
-    method: "POST",
-    headers: { "Authorization": "Bearer " + key, "Content-Type": "application/json" },
-    body: JSON.stringify({ query, topic: "general", search_depth: "basic", max_results: 5, include_answer: false })
-  });
+async function mwmblSearch(query) {
+  const url = new URL("https://api.mwmbl.org/api/v2/search/");
+  url.searchParams.set("q", query.slice(0, 500));
+  // Optional: a Mwmbl API key raises the free quota; anonymous access works without one.
+  if (process.env.MWMBL_API_KEY) url.searchParams.set("api_key", process.env.MWMBL_API_KEY);
+  const response = await fetch(url.toString(), { headers: { "Accept": "application/json" } });
   const data = await response.json().catch(() => ({}));
   if (!response.ok) {
-    const err = new Error(data.message || "Falló la búsqueda web.");
+    const err = new Error("La búsqueda Mwmbl no está disponible temporalmente.");
     err.status = response.status;
     throw err;
   }
-  const results = (data.results || []).filter(x => x.url && x.title).slice(0, 5);
+  const items = Array.isArray(data) ? data : (data.results || data.documents || data.data?.results || data.data || []);
+  const results = (Array.isArray(items) ? items : [])
+    .map(x => ({
+      title: String(x.title || x.name || x.url || x.link || "").trim(),
+      url: String(x.url || x.link || x.href || "").trim(),
+      content: String(x.snippet || x.extract || x.description || x.content || x.text || "").trim()
+    }))
+    .filter(x => x.title && /^https?:\\/\\//i.test(x.url))
+    .filter((x, i, all) => all.findIndex(y => y.url === x.url) === i)
+    .slice(0, 5);
   if (!results.length) return null;
   return {
-    context: "Resultados de búsqueda web recientes. Usa solo lo que sea relevante, no inventes datos ni afirmes que una fuente dice algo que no aparece aquí. Cita las fuentes que uses.\n" +
-      results.map((x, i) => "[" + (i + 1) + "] " + x.title + "\nURL: " + x.url + "\n" + String(x.content || "").slice(0, 1200)).join("\n\n"),
-    sources: results.map(x => ({ title: String(x.title).slice(0, 180), url: x.url }))
+    context: "Resultados de búsqueda web de Mwmbl. Usa solo lo que sea relevante, no inventes datos ni afirmes que una fuente dice algo que no aparece aquí. Los resultados pueden estar incompletos o desactualizados; señala la fecha si importa y recomienda verificar datos financieros en fuentes oficiales.\\n" +
+      results.map((x, i) => "[" + (i + 1) + "] " + x.title + "\\nURL: " + x.url + "\\n" + x.content.slice(0, 1000)).join("\\n\\n"),
+    sources: results.map(x => ({ title: x.title.slice(0, 180), url: x.url }))
   };
 }
 function formatSources(sources) {
@@ -140,12 +147,12 @@ module.exports = async function handler(req, res) {
   const webSearch = needsWebSearch(clean);
   let webContext = null;
   let webSources = [];
-  if (webSearch && process.env.TAVILY_API_KEY) {
+  if (webSearch) {
     try {
-      const result = await tavilySearch(clean[clean.length - 1].content);
+      const result = await mwmblSearch(clean[clean.length - 1].content);
       if (result) { webContext = result.context; webSources = result.sources; }
     } catch (error) {
-      console.warn("[api/chat] Web search unavailable:", error.message || "Unknown error");
+      console.warn("[api/chat] Mwmbl search unavailable:", error.message || "Unknown error");
     }
   }
   const failures = [];

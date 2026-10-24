@@ -193,8 +193,21 @@ document.querySelectorAll("#mainNav a").forEach(a=>a.addEventListener("click",()
   const flushList=()=>{if(list){bubble.appendChild(list);list=null;}};
   const flushTable=()=>{if(table){bubble.appendChild(table);table=null;}};
   const inline=(parent,value)=>{
-   const parts=String(value).split(/(\*\*[^*]+\*\*)/g);
-   parts.forEach(part=>{if(part.startsWith("**")&&part.endsWith("**")){const strong=document.createElement("strong");strong.textContent=part.slice(2,-2);parent.appendChild(strong);}else parent.appendChild(document.createTextNode(part));});
+   const token=/\*\*[^*]+\*\*|\[[^\]]+\]\(https?:\/\/[^\s)]+\)|https?:\/\/[^\s)]+/g;
+   let last=0,match;
+   while((match=token.exec(String(value)))){
+    parent.appendChild(document.createTextNode(String(value).slice(last,match.index)));
+    const part=match[0];
+    if(part.startsWith("**")&&part.endsWith("**")){const strong=document.createElement("strong");strong.textContent=part.slice(2,-2);parent.appendChild(strong);}
+    else{
+     const md=part.match(/^\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)$/);
+     const url=(md?md[2]:part).replace(/[.,;!?]+$/,"");
+     if(/^https?:\/\//i.test(url)){const a=document.createElement("a");a.href=url;a.target="_blank";a.rel="noopener noreferrer";a.className="inline-source-link";a.textContent=md?md[1]:url;parent.appendChild(a);}
+     else parent.appendChild(document.createTextNode(part));
+    }
+    last=token.lastIndex;
+   }
+   parent.appendChild(document.createTextNode(String(value).slice(last)));
   };
   for(let i=0;i<lines.length;i++){
    const line=lines[i], trimmed=line.trim();
@@ -223,9 +236,12 @@ document.querySelectorAll("#mainNav a").forEach(a=>a.addEventListener("click",()
    if(values.length>=2){const total=values.reduce((sum,v)=>sum+Number(v.amount),0);const grid=document.createElement("div");grid.className="budget-visual";values.slice(0,4).forEach(v=>{const card=document.createElement("div");card.className="budget-visual-card";const label=document.createElement("span");label.textContent=v.label;const amount=document.createElement("strong");amount.textContent=new Intl.NumberFormat("es-NI",{style:"currency",currency:"NIO",maximumFractionDigits:0}).format(Number(v.amount));const meter=document.createElement("div");meter.className="budget-meter";const fill=document.createElement("div");fill.className="budget-meter-fill";fill.style.width=(total>0?Math.max(0,Math.min(100,Number(v.amount)/total*100)):0)+"%";meter.appendChild(fill);const pct=document.createElement("small");pct.textContent=(total>0?Number(v.amount)/total*100:0).toFixed(0)+"% del total mostrado";card.append(label,amount,meter,pct);grid.appendChild(card);});bubble.appendChild(grid);}
   }
   row.append(avatar,bubble);
-  const valid=(Array.isArray(sources)?sources:[]).filter(s=>s&&/^https?:\/\//i.test(s.url||"")).filter((s,i,a)=>a.findIndex(x=>x.url===s.url)===i).slice(0,5);
-  if(valid.length){const sourceBox=document.createElement("div");sourceBox.className="source-cards";const heading=document.createElement("h4");heading.textContent="Fuentes consultadas";sourceBox.appendChild(heading);if(meta?.checkedAt){const checked=document.createElement("span");checked.className="source-checked-at";checked.textContent="Consulta realizada: "+new Date(meta.checkedAt).toLocaleString("es-NI",{dateStyle:"medium",timeStyle:"short"});sourceBox.appendChild(checked);}valid.forEach(s=>{const a=document.createElement("a");a.className="source-card";a.href=s.url;a.target="_blank";a.rel="noopener noreferrer";const title=document.createElement("strong");title.textContent=s.title||s.url;const url=document.createElement("span");url.textContent=new URL(s.url).hostname;const arrow=document.createElement("span");arrow.className="source-arrow";arrow.textContent="↗";a.append(title,url,arrow);sourceBox.appendChild(a);});row.appendChild(sourceBox);}
-  if(meta?.searchStatus==="no_sources"){const note=document.createElement("p");note.className="search-note";note.textContent="No pude verificar fuentes web en esta respuesta. Si necesitás datos actuales, intentá de nuevo o consultá una fuente oficial.";row.appendChild(note);}
+  const apiSources=(Array.isArray(sources)?sources:[]).filter(s=>s&&/^https?:\/\//i.test(s.url||""));
+  const linked=[...String(text||"").matchAll(/\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g)].map(m=>({title:m[1],url:m[2].replace(/[.,;!?]+$/,"")}));
+  const plain=[...String(text||"").matchAll(/https?:\/\/[^\s)\]]+/g)].map(m=>({title:m[0],url:m[0].replace(/[.,;!?]+$/,"")}));
+  const valid=[...apiSources,...linked,...plain].filter(s=>/^https?:\/\//i.test(s.url||"")).filter((s,i,a)=>a.findIndex(x=>x.url===s.url)===i).slice(0,5);
+  if(valid.length){const sourceBox=document.createElement("div");sourceBox.className="source-cards";const heading=document.createElement("h4");heading.textContent=apiSources.length?"Fuentes consultadas": "Enlaces incluidos en la respuesta";sourceBox.appendChild(heading);if(apiSources.length&&meta?.checkedAt){const checked=document.createElement("span");checked.className="source-checked-at";checked.textContent="Consulta realizada: "+new Date(meta.checkedAt).toLocaleString("es-NI",{dateStyle:"medium",timeStyle:"short"});sourceBox.appendChild(checked);}if(!apiSources.length){const caveat=document.createElement("span");caveat.className="source-checked-at";caveat.textContent="Estos enlaces proceden del texto de la respuesta y no se han validado automáticamente.";sourceBox.appendChild(caveat);}valid.forEach(s=>{const a=document.createElement("a");a.className="source-card";a.href=s.url;a.target="_blank";a.rel="noopener noreferrer";const title=document.createElement("strong");title.textContent=s.title||s.url;const url=document.createElement("span");try{url.textContent=new URL(s.url).hostname;}catch{url.textContent=s.url;}const arrow=document.createElement("span");arrow.className="source-arrow";arrow.textContent="↗";a.append(title,url,arrow);sourceBox.appendChild(a);});row.appendChild(sourceBox);}
+  if(meta?.searchStatus==="no_sources"){const note=document.createElement("p");note.className="search-note";note.textContent="No pude validar automáticamente las fuentes de la búsqueda. Los enlaces mencionados arriba no se consideran verificados; intentá otra vez o consultá el sitio oficial.";row.appendChild(note);}
   el("chatMessages").appendChild(row);el("chatMessages").scrollTop=el("chatMessages").scrollHeight;
  }
  window.sendChat=async function(raw){

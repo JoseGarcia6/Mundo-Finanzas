@@ -194,7 +194,7 @@ document.querySelectorAll("#mainNav a").forEach(a=>a.addEventListener("click",()
    const response=await fetch(api,{
     method:"POST",
     headers:{"Content-Type":"application/json"},
-    body:JSON.stringify({messages:chatHistory.slice(-10)}),
+    body:JSON.stringify({messages:(()=>{const recent=chatHistory.slice(-10);while(recent.length&&recent[0].role!=="user")recent.shift();return recent;})()}),
     signal:controller.signal
    });
    const result=await response.json().catch(()=>({}));

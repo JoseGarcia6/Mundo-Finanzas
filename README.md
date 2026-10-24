@@ -44,3 +44,17 @@ El sitio estático conserva todas las funciones existentes. El endpoint `api/cha
 5. Si cambias de proveedor, modifica `AI_PROVIDER`, la clave correspondiente y, cuando sea necesario, `AI_MODEL`.
 
 Si la URL no se configura o la API falla, el sitio utiliza el tutor educativo de respaldo. Los límites de solicitudes del endpoint son una protección básica en memoria por instancia, no un sistema global infalible; para uso público amplio, añade almacenamiento compartido y protección contra abuso. Los límites gratuitos del proveedor cambian y no están garantizados. No se debe enviar información personal o bancaria al tutor.
+
+
+## Mejoras en revisión: finanzas personales y aprendizaje
+La rama `mejoras-fase-2-3` agrega al sitio:
+- Registro local de ingresos y gastos en córdobas, balance y gráfica de seis meses.
+- Exportación de movimientos a CSV.
+- Meta de ahorro calculada con los movimientos introducidos.
+- Seguimiento de módulos revisados y mejor puntuación del cuestionario.
+- Ejercicio adicional de patrimonio con explicación.
+- Guardado en `localStorage`, sin cuenta ni base de datos.
+- El tutor conserva el modo de respaldo. Si se configura un backend compatible en `<meta name="ai-api-url" content="...">`, intenta consultar ese endpoint y vuelve al tutor local si falla.
+
+### Cómo probar esta rama
+Abre una vista previa de la rama `mejoras-fase-2-3` o descarga su ZIP desde GitHub. Revisa primero las funciones en móvil y escritorio antes de combinarla con `main`. Los datos locales quedan guardados en el navegador y no se sincronizan entre dispositivos. No almacenes contraseñas, números de cuenta ni información financiera sensible en el sitio.

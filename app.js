@@ -172,8 +172,47 @@ document.querySelectorAll("#mainNav a").forEach(a=>a.addEventListener("click",()
  el("mfReset").addEventListener("click",()=>{if(!confirm("¿Borrar movimientos, meta, progreso y resultados de estas mejoras en este navegador?"))return;data=Object.assign({},defaults,{moves:[],lessons:[],attempts:[]});save();el("mfGoal").value=data.goal;render();});
  render();
  const next=el("nextQuestion");if(next)next.addEventListener("click",()=>{if(el("quizCounter")?.textContent==="EVALUACIÓN COMPLETADA"){const score=Number(el("quizScore").textContent)||0;data.best=Math.max(score,Number(data.best)||0);save();render();}});
- // API opcional: solo funciona con un backend configurado en meta ai-api-url. Si falla, usa el tutor local.
+ // API opcional: en Vercel usa el backend y conserva el historial reciente para preguntas de seguimiento.
  const configuredApi=document.querySelector('meta[name="ai-api-url"]')?.content?.trim();
  const api=configuredApi||(location.hostname.endsWith(".vercel.app")?"/api/chat":"");
- window.sendChat=async function(raw){const clean=String(raw||"").trim();if(!clean)return;document.querySelector(".quick-prompts")?.remove();addMessage(clean,"user");if(!api){addMessage(getTutorAnswer(clean),"bot");return;}const pending=document.createElement("div");pending.className="message bot";pending.innerHTML='<div class="message-avatar">✦</div><div class="bubble">Preparando una explicación…</div>';el("chatMessages").appendChild(pending);try{const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),18000);const response=await fetch(api,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({messages:[{role:"user",content:clean}]}),signal:controller.signal});clearTimeout(timer);if(!response.ok)throw Error("API");const result=await response.json(),answer=String(result.reply||result.answer||result.text||"").trim();if(!answer)throw Error("empty");pending.remove();addMessage(answer,"bot");set("chatFootnote","Tutor generativo conectado. Verifica cálculos y protege tus datos.");}catch(e){pending.remove();addMessage("La IA generativa no está disponible. Uso el tutor educativo de respaldo.\n\n"+getTutorAnswer(clean),"bot");set("chatFootnote","Modo de respaldo activo; la IA requiere un backend disponible.");}};
+ const chatHistory=[];
+ window.sendChat=async function(raw){
+  const clean=String(raw||"").trim();
+  if(!clean)return;
+  document.querySelector(".quick-prompts")?.remove();
+  addMessage(clean,"user");
+  if(!api){addMessage(getTutorAnswer(clean),"bot");return;}
+  chatHistory.push({role:"user",content:clean});
+  const pending=document.createElement("div");
+  pending.className="message bot";
+  pending.innerHTML='<div class="message-avatar">✦</div><div class="bubble">Preparando una explicación…</div>';
+  el("chatMessages").appendChild(pending);
+  let timer;
+  try{
+   const controller=new AbortController();
+   timer=setTimeout(()=>controller.abort(),25000);
+   const response=await fetch(api,{
+    method:"POST",
+    headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({messages:chatHistory.slice(-10)}),
+    signal:controller.signal
+   });
+   const result=await response.json().catch(()=>({}));
+   if(!response.ok)throw new Error(result.error||"La API respondió con error HTTP "+response.status);
+   const answer=String(result.reply||result.answer||result.text||"").trim();
+   if(!answer)throw new Error("La IA devolvió una respuesta vacía.");
+   chatHistory.push({role:"assistant",content:answer});
+   pending.remove();
+   addMessage(answer,"bot");
+   set("chatFootnote","Tutor generativo conectado. Verifica cálculos y protege tus datos.");
+  }catch(e){
+   pending.remove();
+   const fallbackMessage="La IA generativa no está disponible en este momento. Te comparto una explicación de respaldo.\n\n"+getTutorAnswer(clean);
+   chatHistory.push({role:"assistant",content:fallbackMessage});
+   addMessage(fallbackMessage,"bot");
+   set("chatFootnote","Modo de respaldo activo. Si el problema continúa, revisaremos la conexión del servidor.");
+  }finally{
+   if(timer)clearTimeout(timer);
+  }
+ };
 })();

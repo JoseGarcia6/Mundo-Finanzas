@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Mundo Finanzas AI: aprende contabilidad y finanzas con recursos interactivos gratuitos.">
+  <title>Mundo Finanzas AI | Aprende, practica y crece</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="#inicio" aria-label="Mundo Finanzas AI inicio">
+      <span class="brand-mark">MF</span><span>Mundo <b>Finanzas</b><small>APRENDE · PRACTICA · CRECE</small></span>
+    </a>
+    <button class="menu-toggle" id="menuToggle" aria-label="Abrir menú" aria-expanded="false">☰</button>
+    <nav id="mainNav">
+      <a href="#aprende">Aprende</a><a href="#tutor">Tutor IA</a><a href="#practica">Practica</a><a href="#simulador">Simulador</a><a href="#vocacion">Vocación</a>
+    </nav>
+  </header>
+
+  <main>
+    <section class="hero" id="inicio">
+      <div class="hero-copy">
+        <span class="eyebrow"><span class="pulse"></span> TU AULA FINANCIERA DIGITAL</span>
+        <h1>Entiende el dinero.<br><span>Domina tus finanzas.</span></h1>
+        <p>Aprende contabilidad desde cero, practica con ejemplos reales y descubre cómo la tecnología transforma el mundo financiero.</p>
+        <div class="hero-actions"><a class="btn btn-primary" href="#aprende">Comenzar a aprender <span>→</span></a><a class="btn btn-ghost" href="#tutor">Conocer al tutor IA</a></div>
+        <div class="hero-proof"><div class="avatars"><span>📘</span><span>🧮</span><span>💡</span></div><p><b>Aprendizaje práctico</b><br><small>Contenido claro para estudiantes</small></p></div>
+      </div>
+      <div class="hero-art" aria-label="Resumen financiero ilustrativo">
+        <div class="orb orb-one"></div><div class="orb orb-two"></div>
+        <div class="finance-card main-card">
+          <div class="card-top"><span>RESUMEN DEL MES</span><span class="status-dot">●</span></div>
+          <p class="muted">Resultado de ejemplo</p><h2>C$ 15,000.00</h2><span class="gain">↗ Ingresos − gastos</span>
+          <div class="chart"><i style="height:30%"></i><i style="height:47%"></i><i style="height:38%"></i><i style="height:65%"></i><i style="height:55%"></i><i style="height:82%"></i><i style="height:100%"></i></div>
+          <div class="chart-labels"><span>ENE</span><span>FEB</span><span>MAR</span><span>ABR</span><span>MAY</span><span>JUN</span><span>JUL</span></div>
+        </div>
+        <div class="floating-card floating-one"><span class="float-icon">🧾</span><div><small>Concepto clave</small><b>Activos</b></div><span class="float-check">✓</span></div>
+        <div class="floating-card floating-two"><span class="float-icon purple">✦</span><div><small>Aprendizaje</small><b>Pasos sencillos</b></div></div>
+      </div>
+    </section>
+
+    <section class="stats-strip" aria-label="Características del sitio">
+      <div><b>01</b><span>Aprende a tu ritmo</span></div><div><b>02</b><span>Practica con ejemplos</span></div><div><b>03</b><span>Sin API de pago</span></div><div><b>04</b><span>Diseñado para móvil</span></div>
+    </section>
+
+    <section class="section" id="aprende">
+      <div class="section-heading"><div><span class="eyebrow">EXPLORA Y APRENDE</span><h2>Construye tus <span>conocimientos</span></h2></div><p>Conceptos esenciales explicados de manera sencilla y con ejemplos que puedes aplicar.</p></div>
+      <div class="topic-grid">
+        <article class="topic-card"><div class="topic-icon mint">▤</div><span class="topic-number">MÓDULO 01</span><h3>Fundamentos contables</h3><p>Conoce activos, pasivos, patrimonio, ingresos y gastos.</p><button class="text-button" data-topic="contabilidad">Explorar módulo <span>→</span></button></article>
+        <article class="topic-card"><div class="topic-icon peach">₵</div><span class="topic-number">MÓDULO 02</span><h3>Finanzas personales</h3><p>Aprende a organizar tu presupuesto, ahorrar y planificar.</p><button class="text-button" data-topic="finanzas">Explorar módulo <span>→</span></button></article>
+        <article class="topic-card"><div class="topic-icon lavender">⌘</div><span class="topic-number">MÓDULO 03</span><h3>Tecnología e IA</h3><p>Descubre cómo la tecnología apoya el trabajo contable.</p><button class="text-button" data-topic="ia">Explorar módulo <span>→</span></button></article>
+      </div>
+      <div class="lesson-panel" id="lessonPanel" hidden><button class="close-panel" id="closeLesson" aria-label="Cerrar">×</button><span class="eyebrow">MINILECCIÓN</span><h3 id="lessonTitle"></h3><p id="lessonText"></p><div class="example-box" id="lessonExample"></div></div>
+    </section>
+
+    <section class="tutor-section" id="tutor">
+      <div class="tutor-intro"><span class="eyebrow">APRENDIZAJE INTERACTIVO</span><h2>Tu tutor de <span>Finanzas</span></h2><p>Pregunta por conceptos contables y recibe explicaciones sencillas, ejemplos y pistas para seguir aprendiendo.</p>
+        <ul class="check-list"><li>Explicaciones en español claro</li><li>Ejemplos con córdobas (C$)</li><li>Disponible sin una API comercial</li></ul>
+        <div class="notice"><b>Transparencia:</b> en esta primera versión, el tutor usa una base educativa programada; no es un modelo generativo conectado a Internet. Más adelante podemos probar IA en el navegador.</div>
+      </div>
+      <div class="chat-window">
+        <div class="chat-header"><div class="bot-avatar">✦</div><div><b>Mundo Finanzas AI</b><small><span class="online-dot"></span> Tutor educativo · versión gratuita</small></div><button id="clearChat" class="clear-chat" title="Limpiar conversación">↻</button></div>
+        <div class="chat-messages" id="chatMessages" aria-live="polite">
+          <div class="message bot"><div class="message-avatar">✦</div><div class="bubble">¡Hola! 👋 Soy tu tutor de Mundo Finanzas. Preguntame sobre activos, pasivos, patrimonio, presupuesto o inteligencia artificial en la contabilidad.</div></div>
+          <div class="quick-prompts"><button data-prompt="¿Qué es un activo?">¿Qué es un activo?</button><button data-prompt="Explícame los pasivos">¿Qué son los pasivos?</button><button data-prompt="¿Cómo calculo la utilidad?">Calcular utilidad</button></div>
+        </div>
+        <form id="chatForm" class="chat-input"><input id="chatInput" type="text" placeholder="Escribe tu pregunta..." autocomplete="off" aria-label="Escribe tu pregunta"><button type="submit" aria-label="Enviar mensaje">↑</button></form>
+        <p class="chat-footnote">La respuesta se genera en este sitio; no se envía a un servicio de IA externo.</p>
+      </div>
+    </section>
+
+    <section class="section practice-section" id="practica">
+      <div class="section-heading"><div><span class="eyebrow">PONTE A PRUEBA</span><h2>¿Cuánto has <span>aprendido?</span></h2></div><p>Responde estas preguntas rápidas y revisa tu resultado al instante.</p></div>
+      <div class="quiz-card">
+        <div class="quiz-top"><span id="quizCounter">PREGUNTA 1 DE 5</span><span class="quiz-score">Puntos: <b id="quizScore">0</b></span></div><div class="progress-track"><div id="quizProgress"></div></div>
+        <h3 id="quizQuestion"></h3><div id="quizOptions" class="quiz-options"></div><div id="quizFeedback" class="quiz-feedback" aria-live="polite"></div>
+        <div class="quiz-bottom"><button id="restartQuiz" class="btn btn-ghost small-btn">Reiniciar</button><button id="nextQuestion" class="btn btn-primary small-btn" disabled>Siguiente →</button></div>
+      </div>
+    </section>
+
+    <section class="sim-section" id="simulador">
+      <div class="section-heading"><div><span class="eyebrow">SIMULADOR FINANCIERO</span><h2>Haz que los números <span>cuenten.</span></h2></div><p>Introduce datos de ejemplo y observa el resultado de tu negocio.</p></div>
+      <div class="simulator">
+        <div class="sim-form"><label for="income">Ingresos mensuales (C$)<input id="income" type="number" min="0" step="0.01" value="50000"></label><label for="expenses">Gastos mensuales (C$)<input id="expenses" type="number" min="0" step="0.01" value="30000"></label><label for="otherCosts">Otros costos (C$)<input id="otherCosts" type="number" min="0" step="0.01" value="5000"></label><button id="calculate" class="btn btn-primary">Calcular resultado <span>→</span></button></div>
+        <div class="sim-result"><span class="eyebrow">RESULTADO ESTIMADO</span><p class="muted">Ingresos − gastos − otros costos</p><h2 id="profit">C$ 15,000.00</h2><div class="result-divider"></div><div class="result-row"><span>Margen estimado</span><b id="margin">30.0%</b></div><div class="result-row"><span>Estado</span><b id="profitStatus" class="positive">Superávit</b></div><div class="result-note" id="simExplanation">Tus ingresos superan los gastos y costos registrados. Recuerda que este cálculo es educativo y no sustituye un estado financiero completo.</div></div>
+      </div>
+    </section>
+
+    <section class="section career-section" id="vocacion">
+      <div class="career-card"><div class="career-copy"><span class="eyebrow">DESCUBRE TU CAMINO</span><h2>¿Contabilidad y Finanzas es para vos?</h2><p>Responde unas preguntas breves para explorar tus intereses. No es una prueba definitiva ni determina qué carrera debes elegir.</p><button id="startCareer" class="btn btn-primary">Explorar mis intereses <span>→</span></button></div><div class="career-illustration"><div class="career-circle">🎓</div><div class="career-chip chip-a">Pensamiento crítico</div><div class="career-chip chip-b">Tecnología</div><div class="career-chip chip-c">Finanzas</div></div></div>
+      <div id="careerQuiz" class="career-quiz" hidden><h3 id="careerQuestion"></h3><div id="careerOptions" class="career-options"></div><div id="careerResult" class="career-result" hidden></div></div>
+    </section>
+
+    <section class="cta-section"><div><span class="eyebrow">TU FUTURO EMPIEZA HOY</span><h2>Aprender de finanzas puede cambiar tu manera de ver el mundo.</h2><p>Explora, practica y sigue aprendiendo un paso a la vez.</p></div><a href="#aprende" class="btn btn-light">Volver a aprender ↑</a></section>
+  </main>
+
+  <footer><a class="brand footer-brand" href="#inicio"><span class="brand-mark">MF</span><span>Mundo <b>Finanzas</b><small>APRENDE · PRACTICA · CRECE</small></span></a><p>Proyecto educativo · Mundo Finanzas AI</p><span>Hecho para aprender mejor ✦</span></footer>
+  <script src="app.js"></script>
+</body>
+</html>

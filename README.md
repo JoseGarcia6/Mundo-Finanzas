@@ -41,14 +41,11 @@ En **Vercel → Project → Settings → Environment Variables**, configura las 
 
 - `AI_PROVIDER=gemini` y `GEMINI_API_KEY`: Gemini como proveedor principal.
 - `GROQ_API_KEY`: habilita Groq como proveedor alternativo.
-- `OPENROUTER_API_KEY`: habilita OpenRouter como proveedor alternativo.
-- `GEMINI_MODEL`, `GROQ_MODEL` y `OPENROUTER_MODEL`: permiten personalizar el modelo de cada proveedor.
-- `GROQ_SEARCH_MODEL`: modelo Groq para preguntas que necesitan búsqueda web; por defecto se usa `openai/gpt-oss-20b`, que también admite búsqueda web integrada. Para respuestas normales, el modelo Groq predeterminado es `openai/gpt-oss-20b`; si no defines `OPENROUTER_MODEL`, OpenRouter usa `openrouter/free`, un enrutador que selecciona un modelo gratuito disponible.
+- `GEMINI_MODEL` y `GROQ_MODEL`: permiten personalizar el modelo de cada proveedor.
 - `AI_MODEL`: variable heredada que se usa como modelo Gemini si no se define `GEMINI_MODEL`.
 - `ALLOWED_ORIGIN`: origen adicional permitido por la política CORS.
-- `SITE_URL`: referencia opcional para solicitudes a OpenRouter.
 
-El backend intenta primero el proveedor indicado en `AI_PROVIDER` y después prueba los otros proveedores que tengan sus respectivas claves configuradas. Para disponer de respaldo real, configura al menos una clave alternativa además de la principal. Cada proveedor mantiene sus propias cuotas, modelos disponibles y condiciones; el respaldo reduce las interrupciones, pero no garantiza servicio ilimitado.
+El backend intenta primero el proveedor indicado en `AI_PROVIDER` y después prueba el otro proveedor que tenga su clave configurada. Para disponer de respaldo real, configura `GEMINI_API_KEY` y `GROQ_API_KEY`. Cada proveedor mantiene sus propias cuotas, modelos disponibles y condiciones; el respaldo reduce las interrupciones, pero no garantiza servicio ilimitado.
 
 ### Búsqueda en Internet
 

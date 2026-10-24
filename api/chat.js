@@ -24,6 +24,22 @@ function needsWebSearch(messages) {
   const q = messages[messages.length - 1]?.content || "";
   return /\b(actual|actualmente|hoy|ahora|reciente|últim[oa]s?|noticias?|este año|2026|precio|precios|cotización|cotizaciones|tipo de cambio|tasa de interés|inflación|salario mínimo|ley vigente|vigente|buscar en internet|busca en internet|fuentes|fuente|investiga|en la web|en internet|actualizad[oa])\b/i.test(q);
 }
+// Keep only the recent conversation context so repeated turns do not consume the providers' token quotas.
+const MAX_CONTEXT_MESSAGES = 6;
+const MAX_CONTEXT_CHARS = 6000;
+function compactHistory(messages) {
+  const recent = [];
+  let totalChars = 0;
+  for (let i = messages.length - 1; i >= 0 && recent.length < MAX_CONTEXT_MESSAGES; i--) {
+    const message = messages[i];
+    if (totalChars + message.content.length > MAX_CONTEXT_CHARS) break;
+    recent.unshift(message);
+    totalChars += message.content.length;
+  }
+  // Gemini expects the conversation to begin with a user turn, not an assistant turn.
+  while (recent.length && recent[0].role !== "user") recent.shift();
+  return recent;
+}
 function historyForOpenAI(messages) {
   return [{ role: "system", content: systemPrompt() }, ...messages];
 }
@@ -144,6 +160,7 @@ module.exports = async function handler(req, res) {
     clean.push({ role: m.role, content: m.content.trim() });
   }
   if (clean[clean.length - 1].role !== "user") return json(res, 400, { error: "El último mensaje debe ser del usuario." });
+  const contextMessages = compactHistory(clean);
   const primary = (process.env.AI_PROVIDER || "gemini").toLowerCase();
   if (!["gemini", "groq"].includes(primary)) return json(res, 500, { error: "AI_PROVIDER debe ser gemini o groq." });
   const webSearch = needsWebSearch(clean);
@@ -167,8 +184,8 @@ module.exports = async function handler(req, res) {
     
     try {
       const result = provider === "gemini"
-        ? await callGemini(clean, webSearch, webContext)
-        : await callGroq(clean, webSearch, webContext);
+        ? await callGemini(contextMessages, webSearch, webContext)
+        : await callGroq(contextMessages, webSearch, webContext);
       const sources = [...(result.sources || []), ...webSources].filter((s, i, all) => s.url && all.findIndex(x => x.url === s.url) === i).slice(0, 5);
       let reply = result.reply;
       const searched = Boolean(result.searched || (webSearch && sources.length));

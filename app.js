@@ -286,6 +286,7 @@ document.querySelectorAll("#mainNav a").forEach(a=>a.addEventListener("click",()
  window.sendChat=async function(raw){
   const clean=String(raw||"").trim();
   if(!clean)return;
+  if(clean.length>2000){addAssistantMessage("Tu mensaje supera el límite de 2.000 caracteres. Dividilo en mensajes más cortos para que pueda procesarlo correctamente.",[],{searchStatus:"not_requested"});return;}
   document.querySelector(".quick-prompts")?.remove();
   addMessage(clean,"user");
   const budgetAnswer=buildBudgetAnswer(clean);
@@ -312,7 +313,7 @@ document.querySelectorAll("#mainNav a").forEach(a=>a.addEventListener("click",()
    const response=await fetch(api,{
     method:"POST",
     headers:{"Content-Type":"application/json"},
-    body:JSON.stringify({messages:(()=>{const recent=chatHistory.slice(-10);while(recent.length&&recent[0].role!=="user")recent.shift();return recent;})()}),
+    body:JSON.stringify({messages:(()=>{const recent=chatHistory.slice(-10);while(recent.length&&recent[0].role!=="user")recent.shift();return recent.map(m=>({role:m.role,content:m.role==="assistant"&&m.content.length>2000?m.content.slice(-2000):m.content})).filter(m=>m.content.trim().length>0);})()}),
     signal:controller.signal
    });
    const result=await response.json().catch(()=>({}));

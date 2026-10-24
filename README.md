@@ -58,24 +58,3 @@ La rama `mejoras-fase-2-3` agrega al sitio:
 
 ### Cómo probar esta rama
 Abre una vista previa de la rama `mejoras-fase-2-3` o descarga su ZIP desde GitHub. Revisa primero las funciones en móvil y escritorio antes de combinarla con `main`. Los datos locales quedan guardados en el navegador y no se sincronizan entre dispositivos. No almacenes contraseñas, números de cuenta ni información financiera sensible en el sitio.
-
-
-## Backend del tutor generativo (Vercel)
-
-El endpoint está en `api/tutor.js` y usa una función serverless de Vercel. La clave de proveedor solo se lee desde variables de entorno del servidor; nunca debe escribirse en `app.js`, `index.html` ni en el repositorio.
-
-### Variables de entorno
-
-Configura en el proyecto de Vercel:
-
-- `OPENAI_API_KEY`: clave API privada del proveedor.
-- `OPENAI_MODEL`: opcional; por defecto `gpt-4.1-mini`.
-- `ALLOWED_ORIGINS`: origen(es) que pueden llamar al endpoint, separados por comas. Por defecto `https://josegarcia6.github.io`. Si el sitio usa otro dominio, cámbialo por el origen exacto, sin ruta final.
-
-Después del despliegue, configura el atributo `content` de `<meta name="ai-api-url">` en `index.html` con la URL completa del endpoint, por ejemplo `https://TU-PROYECTO.vercel.app/api/tutor`. No uses esa URL de ejemplo literalmente. El sitio publicado debe reconstruirse después de modificar el archivo.
-
-### Protección y límites conocidos
-
-El endpoint valida el método, el origen y la longitud del mensaje, aplica un límite básico por IP y no devuelve al navegador detalles internos del proveedor. El límite en memoria es una protección inicial, no una solución distribuida definitiva: para producción pública conviene añadir rate limiting persistente (por ejemplo, Redis/Upstash o un servicio equivalente), alertas de gasto y límites de uso en el proveedor. No envíes contraseñas, tarjetas ni datos bancarios al tutor.
-
-No se debe integrar ni publicar la clave API en GitHub. Si una clave se expone por accidente, revócala y genera otra desde el proveedor.

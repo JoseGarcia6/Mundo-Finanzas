@@ -183,6 +183,51 @@ document.querySelectorAll("#mainNav a").forEach(a=>a.addEventListener("click",()
  const configuredApi=document.querySelector('meta[name="ai-api-url"]')?.content?.trim();
  const api=configuredApi||(location.hostname.endsWith(".vercel.app")?"/api/chat":"");
  const chatHistory=[];
+ function addAssistantMessage(text,sources,meta){
+  const row=document.createElement("div");row.className="message bot";
+  const avatar=document.createElement("div");avatar.className="message-avatar";avatar.textContent="✦";
+  const bubble=document.createElement("div");bubble.className="bubble assistant-rich";
+  // Render common Markdown elements safely without interpreting arbitrary HTML.
+  const lines=String(text||"").replace(/\r/g,"").split("\n");
+  let list=null, table=null;
+  const flushList=()=>{if(list){bubble.appendChild(list);list=null;}};
+  const flushTable=()=>{if(table){bubble.appendChild(table);table=null;}};
+  const inline=(parent,value)=>{
+   const parts=String(value).split(/(\*\*[^*]+\*\*)/g);
+   parts.forEach(part=>{if(part.startsWith("**")&&part.endsWith("**")){const strong=document.createElement("strong");strong.textContent=part.slice(2,-2);parent.appendChild(strong);}else parent.appendChild(document.createTextNode(part));});
+  };
+  for(let i=0;i<lines.length;i++){
+   const line=lines[i], trimmed=line.trim();
+   if(/^\|.*\|$/.test(trimmed)){
+    flushList();
+    if(/^\|[\s:|-]+\|$/.test(trimmed))continue;
+    if(!table){table=document.createElement("div");table.className="answer-table-wrap";const t=document.createElement("table");t.className="answer-table";table.appendChild(t);}
+    const t=table.querySelector("table"),tr=document.createElement("tr");
+    trimmed.replace(/^\||\|$/g,"").split("|").forEach(cell=>{const el=document.createElement(t.rows.length===0?"th":"td");inline(el,cell.trim());tr.appendChild(el);});
+    t.appendChild(tr);continue;
+   } else flushTable();
+   if(/^\s*[-*•]\s+/.test(line)){
+    if(!list){list=document.createElement("ul");list.className="answer-list";}
+    const li=document.createElement("li");inline(li,line.replace(/^\s*[-*•]\s+/,""));list.appendChild(li);continue;
+   } else flushList();
+   if(!trimmed){continue;}
+   const heading=trimmed.match(/^#{1,3}\s+(.+)$/);
+   const p=document.createElement(heading?"h4":"p");p.className=heading?"answer-heading":"answer-paragraph";
+   inline(p,heading?heading[1]:trimmed);bubble.appendChild(p);
+  }
+  flushList();flushTable();
+  const budget=String(text).match(/(?:necesidades|gastos personales|deseos|ahorro)[^\n]{0,100}?(?:C\$|C\\\$)\s*([\d,]+(?:\.\d+)?)/ig);
+  if(/presupuesto|distribuci[oó]n del salario|regla 50\/30\/20/i.test(text)&&budget&&budget.length>=2){
+   const values=[];
+   budget.forEach((match)=>{const label=match.match(/^(necesidades|gastos personales|deseos|ahorro)[^:]*?/i)?.[1];const amount=match.match(/(?:C\$|C\\\$)\s*([\d,]+(?:\.\d+)?)/i)?.[1];if(label&&amount&&!values.some(v=>v.label.toLowerCase()===label.toLowerCase()))values.push({label:label.charAt(0).toUpperCase()+label.slice(1),amount:amount.replace(/,/g,"")});});
+   if(values.length>=2){const grid=document.createElement("div");grid.className="budget-visual";values.slice(0,4).forEach(v=>{const card=document.createElement("div");card.className="budget-visual-card";const label=document.createElement("span");label.textContent=v.label;const amount=document.createElement("strong");amount.textContent=new Intl.NumberFormat("es-NI",{style:"currency",currency:"NIO",maximumFractionDigits:0}).format(Number(v.amount));card.append(label,amount);grid.appendChild(card);});bubble.appendChild(grid);}
+  }
+  row.append(avatar,bubble);
+  const valid=(Array.isArray(sources)?sources:[]).filter(s=>s&&/^https?:\/\//i.test(s.url||"")).filter((s,i,a)=>a.findIndex(x=>x.url===s.url)===i).slice(0,5);
+  if(valid.length){const sourceBox=document.createElement("div");sourceBox.className="source-cards";const heading=document.createElement("h4");heading.textContent="Fuentes consultadas";sourceBox.appendChild(heading);valid.forEach(s=>{const a=document.createElement("a");a.className="source-card";a.href=s.url;a.target="_blank";a.rel="noopener noreferrer";const title=document.createElement("strong");title.textContent=s.title||s.url;const url=document.createElement("span");url.textContent=new URL(s.url).hostname;const arrow=document.createElement("span");arrow.className="source-arrow";arrow.textContent="↗";a.append(title,url,arrow);sourceBox.appendChild(a);});row.appendChild(sourceBox);}
+  if(meta?.searchStatus==="no_sources"){const note=document.createElement("p");note.className="search-note";note.textContent="No pude verificar fuentes web en esta respuesta. Si necesitás datos actuales, intentá de nuevo o consultá una fuente oficial.";row.appendChild(note);}
+  el("chatMessages").appendChild(row);el("chatMessages").scrollTop=el("chatMessages").scrollHeight;
+ }
  window.sendChat=async function(raw){
   const clean=String(raw||"").trim();
   if(!clean)return;
@@ -210,8 +255,10 @@ document.querySelectorAll("#mainNav a").forEach(a=>a.addEventListener("click",()
    if(!answer)throw new Error("La IA devolvió una respuesta vacía.");
    chatHistory.push({role:"assistant",content:answer});
    pending.remove();
-   addMessage(answer,"bot");
-   set("chatFootnote","Tutor generativo conectado. Verifica cálculos y protege tus datos.");
+   addAssistantMessage(answer,result.sources||[],{searchStatus:result.searchStatus});
+   const providerName=result.provider==="groq"?"Groq (respaldo)":"Gemini";
+   const searchNote=result.searchStatus==="success"?" · fuentes web disponibles":result.searchStatus==="no_sources"?" · sin fuentes web verificables":"";
+   set("chatFootnote","Tutor conectado: "+providerName+searchNote+". Verifica cálculos y protege tus datos.");
   }catch(e){
    pending.remove();
    console.warn("[Mundo Finanzas] Falló la solicitud al tutor:", {
@@ -229,7 +276,7 @@ document.querySelectorAll("#mainNav a").forEach(a=>a.addEventListener("click",()
    }
    const fallbackMessage="La IA generativa no está disponible en este momento. Te comparto una explicación de respaldo.\n\n"+fallback;
    addMessage(fallbackMessage,"bot");
-   set("chatFootnote","Modo de respaldo activo. La solicitud no se completó; revisaremos el error y podés volver a intentarlo.");
+   set("chatFootnote","Servicio temporalmente limitado. Se mostró una explicación de respaldo local; probá de nuevo en unos minutos.");
   }finally{
    if(timer)clearTimeout(timer);
   }

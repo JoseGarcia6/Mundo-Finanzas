@@ -219,12 +219,12 @@ document.querySelectorAll("#mainNav a").forEach(a=>a.addEventListener("click",()
   const budget=String(text).match(/(?:necesidades|gastos personales|deseos|ahorro)[^\n]{0,100}?(?:C\$|C\\\$)\s*([\d,]+(?:\.\d+)?)/ig);
   if(/presupuesto|distribuci[oó]n del salario|regla 50\/30\/20/i.test(text)&&budget&&budget.length>=2){
    const values=[];
-   budget.forEach((match)=>{const label=match.match(/^(necesidades|gastos personales|deseos|ahorro)[^:]*?/i)?.[1];const amount=match.match(/(?:C\$|C\\\$)\s*([\d,]+(?:\.\d+)?)/i)?.[1];if(label&&amount&&!values.some(v=>v.label.toLowerCase()===label.toLowerCase()))values.push({label:label.charAt(0).toUpperCase()+label.slice(1),amount:amount.replace(/,/g,"")});});
+   budget.forEach((match)=>{const label=match.match(/^(?:\\d+[.)]\\s*)?(?:\\*\\*)?(necesidades|gastos personales|deseos|ahorro)/i)?.[1];const amount=match.match(/(?:C\$|C\\\$)\s*([\d,]+(?:\.\d+)?)/i)?.[1];if(label&&amount&&!values.some(v=>v.label.toLowerCase()===label.toLowerCase()))values.push({label:label.charAt(0).toUpperCase()+label.slice(1),amount:amount.replace(/,/g,"")});});
    if(values.length>=2){const grid=document.createElement("div");grid.className="budget-visual";values.slice(0,4).forEach(v=>{const card=document.createElement("div");card.className="budget-visual-card";const label=document.createElement("span");label.textContent=v.label;const amount=document.createElement("strong");amount.textContent=new Intl.NumberFormat("es-NI",{style:"currency",currency:"NIO",maximumFractionDigits:0}).format(Number(v.amount));card.append(label,amount);grid.appendChild(card);});bubble.appendChild(grid);}
   }
   row.append(avatar,bubble);
   const valid=(Array.isArray(sources)?sources:[]).filter(s=>s&&/^https?:\/\//i.test(s.url||"")).filter((s,i,a)=>a.findIndex(x=>x.url===s.url)===i).slice(0,5);
-  if(valid.length){const sourceBox=document.createElement("div");sourceBox.className="source-cards";const heading=document.createElement("h4");heading.textContent="Fuentes consultadas";sourceBox.appendChild(heading);valid.forEach(s=>{const a=document.createElement("a");a.className="source-card";a.href=s.url;a.target="_blank";a.rel="noopener noreferrer";const title=document.createElement("strong");title.textContent=s.title||s.url;const url=document.createElement("span");url.textContent=new URL(s.url).hostname;const arrow=document.createElement("span");arrow.className="source-arrow";arrow.textContent="↗";a.append(title,url,arrow);sourceBox.appendChild(a);});row.appendChild(sourceBox);}
+  if(valid.length){const sourceBox=document.createElement("div");sourceBox.className="source-cards";const heading=document.createElement("h4");heading.textContent="Fuentes consultadas";sourceBox.appendChild(heading);if(meta?.checkedAt){const checked=document.createElement("span");checked.className="source-checked-at";checked.textContent="Consulta realizada: "+new Date(meta.checkedAt).toLocaleString("es-NI",{dateStyle:"medium",timeStyle:"short"});sourceBox.appendChild(checked);}valid.forEach(s=>{const a=document.createElement("a");a.className="source-card";a.href=s.url;a.target="_blank";a.rel="noopener noreferrer";const title=document.createElement("strong");title.textContent=s.title||s.url;const url=document.createElement("span");url.textContent=new URL(s.url).hostname;const arrow=document.createElement("span");arrow.className="source-arrow";arrow.textContent="↗";a.append(title,url,arrow);sourceBox.appendChild(a);});row.appendChild(sourceBox);}
   if(meta?.searchStatus==="no_sources"){const note=document.createElement("p");note.className="search-note";note.textContent="No pude verificar fuentes web en esta respuesta. Si necesitás datos actuales, intentá de nuevo o consultá una fuente oficial.";row.appendChild(note);}
   el("chatMessages").appendChild(row);el("chatMessages").scrollTop=el("chatMessages").scrollHeight;
  }
@@ -255,7 +255,7 @@ document.querySelectorAll("#mainNav a").forEach(a=>a.addEventListener("click",()
    if(!answer)throw new Error("La IA devolvió una respuesta vacía.");
    chatHistory.push({role:"assistant",content:answer});
    pending.remove();
-   addAssistantMessage(answer,result.sources||[],{searchStatus:result.searchStatus});
+   addAssistantMessage(answer,result.sources||[],{searchStatus:result.searchStatus,checkedAt:result.checkedAt});
    const providerName=result.provider==="groq"?"Groq (respaldo)":"Gemini";
    const searchNote=result.searchStatus==="success"?" · fuentes web disponibles":result.searchStatus==="no_sources"?" · sin fuentes web verificables":"";
    set("chatFootnote","Tutor conectado: "+providerName+searchNote+". Verifica cálculos y protege tus datos.");

@@ -163,8 +163,10 @@ module.exports = async function handler(req, res) {
         ? await callGemini(clean, webSearch, webContext)
         : await callGroq(clean, webSearch, webContext);
       const sources = [...(result.sources || []), ...webSources].filter((s, i, all) => s.url && all.findIndex(x => x.url === s.url) === i).slice(0, 5);
-      const reply = result.reply + formatSources(sources);
-      return json(res, 200, { reply, provider, searched: Boolean(result.searched || webSearch && webSources.length), sources });
+      const reply = result.reply;
+      const searched = Boolean(result.searched || (webSearch && sources.length));
+      const searchStatus = !webSearch ? "not_requested" : (sources.length ? "success" : "no_sources");
+      return json(res, 200, { reply, provider, searched, searchStatus, sources, checkedAt: new Date().toISOString() });
     } catch (error) {
       failures.push({ provider, status: error.status || null, message: error.message || "Error desconocido" });
       console.warn("[api/chat] Provider request failed:", { provider, status: error.status || null, message: error.message || "Unknown provider error" });

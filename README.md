@@ -43,7 +43,7 @@ En **Vercel → Project → Settings → Environment Variables**, configura las 
 - `GROQ_API_KEY`: habilita Groq como proveedor alternativo.
 - `OPENROUTER_API_KEY`: habilita OpenRouter como proveedor alternativo.
 - `GEMINI_MODEL`, `GROQ_MODEL` y `OPENROUTER_MODEL`: permiten personalizar el modelo de cada proveedor.
-- `GROQ_SEARCH_MODEL`: modelo Groq para preguntas que necesitan búsqueda web; por defecto se usa `openai/gpt-oss-120b`. Para respuestas normales, el modelo Groq predeterminado es `openai/gpt-oss-20b`; si no defines `OPENROUTER_MODEL`, OpenRouter usa `openrouter/free`, un enrutador que selecciona un modelo gratuito disponible.
+- `GROQ_SEARCH_MODEL`: modelo Groq para preguntas que necesitan búsqueda web; por defecto se usa `openai/gpt-oss-20b`, que también admite búsqueda web integrada. Para respuestas normales, el modelo Groq predeterminado es `openai/gpt-oss-20b`; si no defines `OPENROUTER_MODEL`, OpenRouter usa `openrouter/free`, un enrutador que selecciona un modelo gratuito disponible.
 - `AI_MODEL`: variable heredada que se usa como modelo Gemini si no se define `GEMINI_MODEL`.
 - `ALLOWED_ORIGIN`: origen adicional permitido por la política CORS.
 - `SITE_URL`: referencia opcional para solicitudes a OpenRouter.

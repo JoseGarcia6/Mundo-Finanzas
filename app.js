@@ -312,7 +312,7 @@ document.querySelectorAll("#mainNav a").forEach(a=>a.addEventListener("click",()
    const response=await fetch(api,{
     method:"POST",
     headers:{"Content-Type":"application/json"},
-    body:JSON.stringify({messages:(()=>{const recent=chatHistory.slice(-10);while(recent.length&&recent[0].role!=="user")recent.shift();return recent;})()}),
+    body:JSON.stringify({messages:(()=>{const recent=chatHistory.slice(-10);while(recent.length&&recent[0].role!=="user")recent.shift();return recent.map(m=>({role:m.role,content:m.role==="assistant"&&m.content.length>2000?m.content.slice(-2000):m.content})).filter(m=>m.content.trim().length>0);})()}),
     signal:controller.signal
    });
    const result=await response.json().catch(()=>({}));

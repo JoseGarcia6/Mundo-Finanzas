@@ -170,9 +170,12 @@ module.exports = async function handler(req, res) {
         ? await callGemini(clean, webSearch, webContext)
         : await callGroq(clean, webSearch, webContext);
       const sources = [...(result.sources || []), ...webSources].filter((s, i, all) => s.url && all.findIndex(x => x.url === s.url) === i).slice(0, 5);
-      const reply = result.reply;
+      let reply = result.reply;
       const searched = Boolean(result.searched || (webSearch && sources.length));
       const searchStatus = !webSearch ? "not_requested" : (sources.length ? "success" : (webSearchFailed ? "unavailable" : "no_sources"));
+      if (webSearch && sources.length === 0) {
+        reply = "No pude comprobar fuentes web utilizables para esta consulta. Para evitar presentar cifras actuales o enlaces sin verificar, no voy a dar esos datos como confirmados. Intentá nuevamente en unos minutos o consultá directamente el organismo oficial correspondiente.";
+      }
       return json(res, 200, { reply, provider, searched, searchStatus, sources, checkedAt: new Date().toISOString() });
     } catch (error) {
       failures.push({ provider, status: error.status || null, message: error.message || "Error desconocido" });

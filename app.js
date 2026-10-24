@@ -58,8 +58,8 @@ function sendChat(text) {
   document.querySelector(".quick-prompts")?.remove();
   addMessage(clean,"user"); addMessage(getTutorAnswer(clean),"bot");
 }
-$("chatForm").addEventListener("submit", e => {e.preventDefault(); sendChat($("chatInput").value); $("chatInput").value="";});
-document.querySelectorAll("[data-prompt]").forEach(b => b.addEventListener("click", () => sendChat(b.dataset.prompt)));
+$("chatForm").addEventListener("submit", e => {e.preventDefault(); window.sendChat($("chatInput").value); $("chatInput").value="";});
+document.querySelectorAll("[data-prompt]").forEach(b => b.addEventListener("click", () => window.sendChat(b.dataset.prompt)));
 $("clearChat").addEventListener("click", () => {
   $("chatMessages").innerHTML = '<div class="message bot"><div class="message-avatar">✦</div><div class="bubble">¡Hola de nuevo! Preguntame sobre activos, pasivos, patrimonio, presupuesto o inteligencia artificial en la contabilidad.</div></div>';
 });

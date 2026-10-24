@@ -323,6 +323,14 @@ document.querySelectorAll("#mainNav a").forEach(a=>a.addEventListener("click",()
     name: e?.name || "Error"
    });
    const normalized = clean.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+   // Si falla la API ante una consulta de actualidad, no responder con una lección ajena al tema.
+   // addAssistantMessage mostrará el enlace oficial del INIDE cuando corresponda.
+   if (/inflacion|ipc|indice de precios/.test(normalized) && /nicaragua|inide/.test(normalized)) {
+    const message = "No pude conectar con el servicio de IA o búsqueda web para verificar los datos más recientes del INIDE. Para evitar darte cifras sin confirmar, no voy a presentar valores como actuales. Consultá el portal oficial del Índice de Precios al Consumidor (IPC) del INIDE en el enlace de referencia.";
+    addAssistantMessage(message, [], {searchStatus:"unavailable", query:clean});
+    set("chatFootnote","Servicio de IA o búsqueda temporalmente no disponible. El enlace oficial es una referencia, no una verificación automática de los datos.");
+    return;
+   }
    let fallback = getTutorAnswer(clean);
    const previousUser = [...chatHistory].reverse().find(m => m.role === "user" && m.content !== clean);
    const previousTopic = previousUser?.content.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "") || "";

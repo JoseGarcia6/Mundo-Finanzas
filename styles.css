@@ -31,3 +31,5 @@
 @media(max-width:650px){.source-cards,.search-note{margin-left:0}.budget-visual{grid-template-columns:repeat(2,minmax(0,1fr))}.answer-table{font-size:11px}}
 
 .source-checked-at{font-size:10px;color:var(--muted);margin-bottom:3px}
+
+.budget-meter{height:6px;background:#e4eee7;border-radius:999px;overflow:hidden}.budget-meter-fill{height:100%;background:var(--green);border-radius:999px}.budget-visual-card small{font-size:10px;color:var(--muted)}

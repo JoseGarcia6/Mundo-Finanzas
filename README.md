@@ -54,9 +54,12 @@ El backend intenta primero el proveedor indicado en `AI_PROVIDER` y después pru
 
 - Gemini puede usar Google Search grounding para preguntas que parezcan requerir información actualizada.
 - Groq puede utilizar su herramienta de búsqueda integrada en las preguntas actuales cuando se usa un modelo compatible.
-- Opcionalmente, configura `TAVILY_API_KEY` para hacer una búsqueda web común antes de enviar la consulta a los modelos; esto permite aportar resultados a cualquiera de los proveedores habilitados.
+- La búsqueda web común utiliza Mwmbl mediante su API pública: no hace falta una clave para probar el nivel anónimo (hasta 1.000 solicitudes mensuales y 1 solicitud por segundo, sujeto a los términos vigentes).
+- Opcionalmente, configura `MWMBL_API_KEY` como variable secreta en Vercel para usar el nivel gratuito identificado, anunciado con hasta 2.000 solicitudes mensuales y 5 solicitudes por segundo. No habilites facturación de pago si quieres mantener el proyecto sin coste.
 
-La búsqueda se activa principalmente para consultas sobre información reciente, precios, tasas, noticias o cuando se solicita buscar en Internet. La disponibilidad, los límites gratuitos y los posibles costos dependen del proveedor y de la configuración de la cuenta. Revisa los términos y precios antes de habilitar un servicio.
+Mwmbl procesa la consulta enviada para devolver resultados. El backend debe enviar únicamente la pregunta necesaria para buscar; no incluyas nombres, correos, contraseñas, datos bancarios ni información financiera privada. El límite anónimo se asocia a la IP de salida, por lo que en una plataforma desplegada puede variar o agotarse antes de lo esperado.
+
+La búsqueda se activa principalmente para consultas sobre información reciente, precios, tasas, noticias o cuando se solicita buscar en Internet. Los resultados pueden ser incompletos o desactualizados; la IA debe priorizar fuentes oficiales para datos financieros y mostrar las fuentes cuando estén disponibles.
 
 Después de cambiar variables, vuelve a desplegar el proyecto para que el backend utilice la configuración nueva. Guarda las claves como variables sensibles en Vercel: **no las incluyas en `index.html`, `app.js` ni en el repositorio**.
 

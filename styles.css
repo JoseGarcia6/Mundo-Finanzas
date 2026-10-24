@@ -33,3 +33,5 @@
 .source-checked-at{font-size:10px;color:var(--muted);margin-bottom:3px}
 
 .budget-meter{height:6px;background:#e4eee7;border-radius:999px;overflow:hidden}.budget-meter-fill{height:100%;background:var(--green);border-radius:999px}.budget-visual-card small{font-size:10px;color:var(--muted)}
+
+.inline-source-link{color:var(--green);text-decoration:underline;text-underline-offset:2px;overflow-wrap:anywhere}.inline-source-link:hover{opacity:.78}

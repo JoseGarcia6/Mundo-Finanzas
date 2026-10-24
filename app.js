@@ -290,7 +290,16 @@ document.querySelectorAll("#mainNav a").forEach(a=>a.addEventListener("click",()
   addMessage(clean,"user");
   const budgetAnswer=buildBudgetAnswer(clean);
   if(budgetAnswer){chatHistory.push({role:"user",content:clean},{role:"assistant",content:budgetAnswer});addAssistantMessage(budgetAnswer,[],{searchStatus:"not_requested"});set("chatFootnote","Presupuesto calculado automáticamente; revisa los montos antes de tomar decisiones.");return;}
-  if(!api){addMessage(getTutorAnswer(clean),"bot");return;}
+  if(!api){
+   const normalized = clean.toLowerCase().normalize("NFD").replace(/[\\u0300-\\u036f]/g, "");
+   if (/inflacion|ipc|indice de precios/.test(normalized) && /nicaragua|inide/.test(normalized)) {
+    const message = "No pude conectar con el servicio de IA o búsqueda web para verificar los datos más recientes del INIDE. Para evitar darte cifras sin confirmar, no voy a presentar valores como actuales. Consultá el portal oficial del Índice de Precios al Consumidor (IPC) del INIDE en el enlace de referencia.";
+    addAssistantMessage(message, [], {searchStatus:"unavailable", query:clean});
+    set("chatFootnote","Servicio de IA o búsqueda temporalmente no disponible. El enlace oficial es una referencia, no una verificación automática de los datos.");
+    return;
+   }
+   addMessage(getTutorAnswer(clean),"bot");return;
+  }
   chatHistory.push({role:"user",content:clean});
   const pending=document.createElement("div");
   pending.className="message bot";

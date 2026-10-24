@@ -18,7 +18,7 @@ function checkRateLimit(req) {
   return entry.count <= MAX_REQUESTS_PER_WINDOW;
 }
 function systemPrompt() {
-  return "Eres el tutor educativo de Mundo Finanzas, una plataforma en español para aprender contabilidad y finanzas personales, con ejemplos en córdobas nicaragüenses (C$). Responde directamente a la pregunta más reciente y usa el historial para entender referencias como eso, ellos o ¿para qué sirve?. No vuelvas a saludar en cada respuesta salvo que el usuario salude. Explica con claridad y ejemplos cotidianos. Para cálculos, muestra la fórmula y los pasos, verifica las operaciones y termina todos los ejemplos numéricos. Procura respuestas completas y concisas, normalmente de 2 a 6 párrafos, sin cortar frases ni operaciones. No afirmes que eres asesor financiero profesional, no prometas rendimientos ni recomiendes inversiones personalizadas. La información es educativa. No solicites contraseñas, números de tarjetas, cuentas bancarias ni otros datos sensibles. Si la pregunta no trata de finanzas, contabilidad, educación o tecnología relacionada, responde brevemente y vuelve a orientar al aprendizaje. Si usas información de Internet, distingue hechos, estimaciones y opiniones, indica la fecha cuando importe y menciona las fuentes al final.";
+  return "Eres el tutor educativo de Mundo Finanzas, una plataforma en español para aprender contabilidad y finanzas personales, con ejemplos en córdobas nicaragüenses (C$). Responde directamente a la pregunta más reciente y usa el historial para entender referencias como eso, ellos o ¿para qué sirve?. No vuelvas a saludar en cada respuesta salvo que el usuario salude. Explica con claridad y ejemplos cotidianos. Para cálculos, muestra la fórmula y los pasos, verifica las operaciones y termina todos los ejemplos numéricos. Procura respuestas completas y concisas, normalmente de 2 a 6 párrafos, sin cortar frases ni operaciones. No afirmes que eres asesor financiero profesional, no prometas rendimientos ni recomiendes inversiones personalizadas. La información es educativa. No solicites contraseñas, números de tarjetas, cuentas bancarias ni otros datos sensibles. Si la pregunta no trata de finanzas, contabilidad, educación o tecnología relacionada, responde brevemente y vuelve a orientar al aprendizaje. Si usas información de Internet, distingue hechos, estimaciones y opiniones, indica la fecha de los datos cuando importe y prioriza fuentes oficiales y documentos recientes. No inventes fechas ni afirmes que un dato es actual si no puedes comprobar el periodo. No incluyas URLs crudas ni una lista textual de fuentes: la aplicación mostrará las fuentes verificables como enlaces.";
 }
 function needsWebSearch(messages) {
   const q = messages[messages.length - 1]?.content || "";
@@ -111,7 +111,12 @@ async function callGroq(messages, webSearch, webContext) {
   if (!response.ok) { const err = new Error(data.error?.message || "Error del proveedor Groq."); err.status = response.status; throw err; }
   const reply = data.choices?.[0]?.message?.content;
   if (typeof reply !== "string" || !reply.trim()) throw new Error("La IA no devolvió texto. Intenta otra vez.");
-  return { reply: reply.trim(), sources: [], searched: Boolean(webContext || (webSearch && !webContext)) };
+  const annotations = data.choices?.[0]?.message?.annotations || [];
+  const sources = annotations.map(a => a.url_citation || a.urlCitation || a).map(a => ({
+    title: String(a.title || a.url || a.url_citation?.url || "").trim(),
+    url: String(a.url || a.url_citation?.url || "").trim()
+  })).filter(s => /^https?:\/\//i.test(s.url)).filter((s,i,all)=>all.findIndex(x=>x.url===s.url)===i).slice(0,5);
+  return { reply: reply.trim(), sources, searched: Boolean(webContext || (webSearch && !webContext)) };
 }
 function providerOrder(primary) {
   const order = [primary, "gemini", "groq"];
@@ -163,8 +168,10 @@ module.exports = async function handler(req, res) {
         ? await callGemini(clean, webSearch, webContext)
         : await callGroq(clean, webSearch, webContext);
       const sources = [...(result.sources || []), ...webSources].filter((s, i, all) => s.url && all.findIndex(x => x.url === s.url) === i).slice(0, 5);
-      const reply = result.reply + formatSources(sources);
-      return json(res, 200, { reply, provider, searched: Boolean(result.searched || webSearch && webSources.length), sources });
+      const reply = result.reply;
+      const searched = Boolean(result.searched || (webSearch && sources.length));
+      const searchStatus = !webSearch ? "not_requested" : (sources.length ? "success" : "no_sources");
+      return json(res, 200, { reply, provider, searched, searchStatus, sources, checkedAt: new Date().toISOString() });
     } catch (error) {
       failures.push({ provider, status: error.status || null, message: error.message || "Error desconocido" });
       console.warn("[api/chat] Provider request failed:", { provider, status: error.status || null, message: error.message || "Unknown provider error" });

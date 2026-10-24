@@ -268,7 +268,19 @@ document.querySelectorAll("#mainNav a").forEach(a=>a.addEventListener("click",()
   const plain=[...String(text||"").matchAll(/https?:\/\/[^\s)\]]+/g)].map(m=>({title:m[0],url:m[0].replace(/[.,;!?]+$/,"")}));
   const valid=[...apiSources,...linked,...plain].filter(s=>/^https?:\/\//i.test(s.url||"")).filter((s,i,a)=>a.findIndex(x=>x.url===s.url)===i).slice(0,5);
   if(valid.length){const sourceBox=document.createElement("div");sourceBox.className="source-cards";const heading=document.createElement("h4");heading.textContent=apiSources.length?"Fuentes consultadas": "Enlaces incluidos en la respuesta";sourceBox.appendChild(heading);if(apiSources.length&&meta?.checkedAt){const checked=document.createElement("span");checked.className="source-checked-at";checked.textContent="Consulta realizada: "+new Date(meta.checkedAt).toLocaleString("es-NI",{dateStyle:"medium",timeStyle:"short"});sourceBox.appendChild(checked);}if(!apiSources.length){const caveat=document.createElement("span");caveat.className="source-checked-at";caveat.textContent="Estos enlaces proceden del texto de la respuesta y no se han validado automáticamente.";sourceBox.appendChild(caveat);}valid.forEach(s=>{const a=document.createElement("a");a.className="source-card";a.href=s.url;a.target="_blank";a.rel="noopener noreferrer";const title=document.createElement("strong");title.textContent=s.title||s.url;const url=document.createElement("span");try{url.textContent=new URL(s.url).hostname;}catch{url.textContent=s.url;}const arrow=document.createElement("span");arrow.className="source-arrow";arrow.textContent="↗";a.append(title,url,arrow);sourceBox.appendChild(a);});row.appendChild(sourceBox);}
-  if(meta?.searchStatus==="no_sources"||meta?.searchStatus==="unavailable"){const note=document.createElement("p");note.className="search-note";note.textContent=meta.searchStatus==="unavailable"?"El servicio de búsqueda web no está disponible temporalmente. No se pudo comprobar la actualidad de los datos.":"No pude validar automáticamente las fuentes de la búsqueda. Los enlaces mencionados arriba no se consideran verificados; intentá otra vez o consultá el sitio oficial.";row.appendChild(note);}
+
+  const queryText=String(meta?.query||"").toLowerCase().normalize("NFD").replace(/[\\u0300-\\u036f]/g,"");
+  const isNicaraguaInflation=/inflacion|ipc|indice de precios/.test(queryText)&&/nicaragua|inide/.test(queryText);
+  if(!valid.length && isNicaraguaInflation && (meta?.searchStatus==="no_sources"||meta?.searchStatus==="unavailable")){
+   const sourceBox=document.createElement("div");sourceBox.className="source-cards";
+   const heading=document.createElement("h4");heading.textContent="Portal oficial para consultar los datos";sourceBox.appendChild(heading);
+   const caveat=document.createElement("span");caveat.className="source-checked-at";caveat.textContent="Enlace oficial de referencia; la búsqueda automática no confirmó el reporte más reciente.";sourceBox.appendChild(caveat);
+   const a=document.createElement("a");a.className="source-card";a.href="https://www.inide.gob.ni/Home/ipc";a.target="_blank";a.rel="noopener noreferrer";
+   const title=document.createElement("strong");title.textContent="INIDE — Informes del Índice de Precios al Consumidor (IPC)";
+   const host=document.createElement("span");host.textContent="www.inide.gob.ni";const arrow=document.createElement("span");arrow.className="source-arrow";arrow.textContent="↗";a.append(title,host,arrow);sourceBox.appendChild(a);row.appendChild(sourceBox);
+  }
+  if((meta?.searchStatus==="no_sources"||meta?.searchStatus==="unavailable")&&!/no pude comprobar fuentes web utilizables/i.test(String(text||""))){const note=document.createElement("p");note.className="search-note";note.textContent=meta.searchStatus==="unavailable"?"El servicio de búsqueda web no está disponible temporalmente. No se pudo comprobar la actualidad de los datos.":"La búsqueda no devolvió fuentes web utilizables; los datos actuales no se consideran verificados.";row.appendChild(note);}
+
   el("chatMessages").appendChild(row);el("chatMessages").scrollTop=el("chatMessages").scrollHeight;
  }
  window.sendChat=async function(raw){
@@ -300,7 +312,7 @@ document.querySelectorAll("#mainNav a").forEach(a=>a.addEventListener("click",()
    if(!answer)throw new Error("La IA devolvió una respuesta vacía.");
    chatHistory.push({role:"assistant",content:answer});
    pending.remove();
-   addAssistantMessage(answer,result.sources||[],{searchStatus:result.searchStatus,checkedAt:result.checkedAt});
+   addAssistantMessage(answer,result.sources||[],{searchStatus:result.searchStatus,checkedAt:result.checkedAt,query:clean});
    const providerName=result.provider==="groq"?"Groq (respaldo)":"Gemini";
    const searchNote=result.searchStatus==="success"?" · fuentes web disponibles":result.searchStatus==="no_sources"?" · sin fuentes web verificables":"";
    set("chatFootnote","Tutor conectado: "+providerName+searchNote+". Verifica cálculos y protege tus datos.");

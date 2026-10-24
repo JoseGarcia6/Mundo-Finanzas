@@ -53,7 +53,13 @@ async function callOpenAICompatible(provider, messages) {
   return reply.trim();
 }
 module.exports = async function handler(req, res) {
-  res.setHeader("Access-Control-Allow-Origin", process.env.ALLOWED_ORIGIN || "https://josegarcia6.github.io");
+  const origin = req.headers.origin || "";
+  const configuredOrigin = (process.env.ALLOWED_ORIGIN || "").replace(/\/$/, "");
+  const knownOrigin = origin === "https://mundo-finanzas-seven.vercel.app" ||
+    origin === "https://josegarcia6.github.io" ||
+    /^https:\/\/mundo-finanzas(?:-[a-z0-9-]+)?\.vercel\.app$/i.test(origin);
+  const allowedOrigin = origin && (origin.replace(/\/$/, "") === configuredOrigin || knownOrigin);
+  if (allowedOrigin) res.setHeader("Access-Control-Allow-Origin", origin);
   res.setHeader("Vary", "Origin");
   res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
   res.setHeader("Access-Control-Allow-Headers", "Content-Type");
@@ -76,6 +82,11 @@ module.exports = async function handler(req, res) {
     else return json(res, 500, { error: "AI_PROVIDER debe ser gemini, groq u openrouter." });
     return json(res, 200, { reply, provider });
   } catch (error) {
+    console.error("[api/chat] Provider request failed:", {
+      provider,
+      status: error.status || null,
+      message: error.message || "Unknown provider error"
+    });
     const status = error.status === 429 ? 429 : error.status === 400 ? 400 : 502;
     return json(res, status, { error: status === 429 ? "La cuota del proveedor está temporalmente limitada." : "La IA no está disponible temporalmente. " + (process.env.NODE_ENV === "development" ? error.message : "Intenta más tarde.") });
   }

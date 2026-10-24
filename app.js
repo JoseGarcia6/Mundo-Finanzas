@@ -54,11 +54,6 @@ function addMessage(text, who) {
   row.append(avatar,bubble); $("chatMessages").appendChild(row);
   if (typeof window.renderMathInElement === "function") {
     window.renderMathInElement(bubble, {
-      delimiters: [
-        {left: "$", right: "$", display: true},
-        {left: "\\[", right: "\\]", display: true},
-        {left: "\\(", right: "\\)", display: false}
-      ],
       throwOnError: false,
       strict: "ignore"
     });

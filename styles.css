@@ -29,3 +29,5 @@
 .budget-visual-card span{font-size:11px;color:var(--muted)}
 .budget-visual-card strong{font-size:16px;color:var(--green)}
 @media(max-width:650px){.source-cards,.search-note{margin-left:0}.budget-visual{grid-template-columns:repeat(2,minmax(0,1fr))}.answer-table{font-size:11px}}
+
+.source-checked-at{font-size:10px;color:var(--muted);margin-bottom:3px}

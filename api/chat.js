@@ -91,7 +91,7 @@ async function callOpenAICompatible(provider, messages, webSearch, webContext) {
   const body = { model, messages: apiMessages, temperature: 0.5, max_tokens: 900 };
   if (isGroq && webSearch && !webContext) {
     // Groq's built-in browser search is available for GPT-OSS models.
-    model = process.env.GROQ_SEARCH_MODEL || "openai/gpt-oss-120b";
+    model = process.env.GROQ_SEARCH_MODEL || "openai/gpt-oss-20b";
     body.model = model;
     body.tools = [{ type: "browser_search" }];
     body.tool_choice = "required";

@@ -18,7 +18,7 @@ function checkRateLimit(req) {
   return entry.count <= MAX_REQUESTS_PER_WINDOW;
 }
 function systemPrompt() {
-  return "Eres el tutor educativo de Mundo Finanzas, una plataforma en español para aprender contabilidad y finanzas personales, con ejemplos en córdobas nicaragüenses (C$). Responde directamente a la pregunta más reciente y usa el historial para entender referencias como eso, ellos o ¿para qué sirve?. No vuelvas a saludar en cada respuesta salvo que el usuario salude. Explica con claridad y ejemplos cotidianos. Para cálculos, muestra la fórmula y los pasos, verifica las operaciones y termina todos los ejemplos numéricos. Procura respuestas completas y concisas, normalmente de 2 a 6 párrafos, sin cortar frases ni operaciones. No afirmes que eres asesor financiero profesional, no prometas rendimientos ni recomiendes inversiones personalizadas. La información es educativa. No solicites contraseñas, números de tarjetas, cuentas bancarias ni otros datos sensibles. Si la pregunta no trata de finanzas, contabilidad, educación o tecnología relacionada, responde brevemente y vuelve a orientar al aprendizaje. Si usas información de Internet, distingue hechos, estimaciones y opiniones, indica la fecha de los datos cuando importe y prioriza fuentes oficiales y documentos recientes. No inventes fechas ni afirmes que un dato es actual si no puedes comprobar el periodo. No incluyas URLs crudas ni una lista textual de fuentes: la aplicación mostrará las fuentes verificables como enlaces.";
+  return "Eres el tutor educativo de Mundo Finanzas, una plataforma en español para aprender contabilidad y finanzas personales, con ejemplos en córdobas nicaragüenses (C$). Responde directamente a la pregunta más reciente y usa el historial para entender referencias como eso, ellos o ¿para qué sirve?. No vuelvas a saludar en cada respuesta salvo que el usuario salude. Explica con claridad y ejemplos cotidianos. Para cálculos, muestra la fórmula y los pasos, verifica las operaciones y termina todos los ejemplos numéricos. Procura respuestas completas y concisas, normalmente de 2 a 6 párrafos, sin cortar frases ni operaciones. No afirmes que eres asesor financiero profesional, no prometas rendimientos ni recomiendes inversiones personalizadas. La información es educativa. No solicites contraseñas, números de tarjetas, cuentas bancarias ni otros datos sensibles. Si la pregunta no trata de finanzas, contabilidad, educación o tecnología relacionada, responde brevemente y vuelve a orientar al aprendizaje. Si usas información de Internet, distingue hechos, estimaciones y opiniones, indica la fecha de los datos cuando importe y prioriza fuentes oficiales y documentos recientes. No inventes fechas ni afirmes que un dato es actual si no puedes comprobar el periodo. Si el usuario pide datos actuales y no recibes resultados web utilizables, dilo claramente y no presentes cifras actuales como verificadas. No inventes citas del tipo 【1†L1-L2】. No incluyas URLs crudas ni una lista textual de fuentes: la aplicación mostrará los resultados web recibidos como enlaces.";
 }
 function needsWebSearch(messages) {
   const q = messages[messages.length - 1]?.content || "";
@@ -44,7 +44,7 @@ async function mwmblSearch(query) {
     .map(x => ({
       title: String(x.title || x.name || x.url || x.link || "").trim(),
       url: String(x.url || x.link || x.href || "").trim(),
-      content: String(x.snippet || x.extract || x.description || x.content || x.text || "").trim()
+      content: String(x.snippet || x.extract || x.description || x.content || x.text || x.summary || "").trim()
     }))
     .filter(x => x.title && (x.url.startsWith("https://") || x.url.startsWith("http://")) )
     .filter((x, i, all) => all.findIndex(y => y.url === x.url) === i)
@@ -149,11 +149,13 @@ module.exports = async function handler(req, res) {
   const webSearch = needsWebSearch(clean);
   let webContext = null;
   let webSources = [];
+  let webSearchFailed = false;
   if (webSearch) {
     try {
       const result = await mwmblSearch(clean[clean.length - 1].content);
       if (result) { webContext = result.context; webSources = result.sources; }
     } catch (error) {
+      webSearchFailed = true;
       console.warn("[api/chat] Mwmbl search unavailable:", error.message || "Unknown error");
     }
   }
@@ -170,7 +172,7 @@ module.exports = async function handler(req, res) {
       const sources = [...(result.sources || []), ...webSources].filter((s, i, all) => s.url && all.findIndex(x => x.url === s.url) === i).slice(0, 5);
       const reply = result.reply;
       const searched = Boolean(result.searched || (webSearch && sources.length));
-      const searchStatus = !webSearch ? "not_requested" : (sources.length ? "success" : "no_sources");
+      const searchStatus = !webSearch ? "not_requested" : (sources.length ? "success" : (webSearchFailed ? "unavailable" : "no_sources"));
       return json(res, 200, { reply, provider, searched, searchStatus, sources, checkedAt: new Date().toISOString() });
     } catch (error) {
       failures.push({ provider, status: error.status || null, message: error.message || "Error desconocido" });

@@ -85,7 +85,7 @@ async function callOpenAICompatible(provider, messages, webSearch, webContext) {
   const key = isGroq ? process.env.GROQ_API_KEY : process.env.OPENROUTER_API_KEY;
   if (!key) throw new Error("Falta " + (isGroq ? "GROQ_API_KEY" : "OPENROUTER_API_KEY") + " en Vercel.");
   const url = isGroq ? "https://api.groq.com/openai/v1/chat/completions" : "https://openrouter.ai/api/v1/chat/completions";
-  let model = isGroq ? (process.env.GROQ_MODEL || "llama-3.3-70b-versatile") : (process.env.OPENROUTER_MODEL || "google/gemini-3.6-flash");
+  let model = isGroq ? (process.env.GROQ_MODEL || "openai/gpt-oss-20b") : (process.env.OPENROUTER_MODEL || "openrouter/free");
   const apiMessages = historyForOpenAI(messages);
   if (webContext) apiMessages[0].content += "\n\n" + webContext;
   const body = { model, messages: apiMessages, temperature: 0.5, max_tokens: 900 };
@@ -94,6 +94,9 @@ async function callOpenAICompatible(provider, messages, webSearch, webContext) {
     model = process.env.GROQ_SEARCH_MODEL || "openai/gpt-oss-120b";
     body.model = model;
     body.tools = [{ type: "browser_search" }];
+    body.tool_choice = "required";
+    body.max_completion_tokens = 900;
+    delete body.max_tokens;
   }
   const response = await fetch(url, {
     method: "POST",

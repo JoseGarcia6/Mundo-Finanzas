@@ -286,6 +286,7 @@ document.querySelectorAll("#mainNav a").forEach(a=>a.addEventListener("click",()
  window.sendChat=async function(raw){
   const clean=String(raw||"").trim();
   if(!clean)return;
+  if(clean.length>2000){addAssistantMessage("Tu mensaje supera el límite de 2.000 caracteres. Dividilo en mensajes más cortos para que pueda procesarlo correctamente.",[],{searchStatus:"not_requested"});return;}
   document.querySelector(".quick-prompts")?.remove();
   addMessage(clean,"user");
   const budgetAnswer=buildBudgetAnswer(clean);

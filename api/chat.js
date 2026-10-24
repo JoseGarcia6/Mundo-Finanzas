@@ -110,10 +110,6 @@ function providerOrder(primary) {
   const order = [primary, "gemini", "groq", "openrouter"];
   return [...new Set(order)].filter(p => ["gemini", "groq", "openrouter"].includes(p));
 }
-function isRetryable(error) {
-  const status = Number(error?.status || 0);
-  return !status || status === 408 || status === 409 || status === 425 || status === 429 || status >= 500;
-}
 module.exports = async function handler(req, res) {
   const origin = req.headers.origin || "";
   const configuredOrigin = (process.env.ALLOWED_ORIGIN || "").replace(/\/$/, "");
@@ -165,7 +161,6 @@ module.exports = async function handler(req, res) {
     } catch (error) {
       failures.push({ provider, status: error.status || null, message: error.message || "Error desconocido" });
       console.warn("[api/chat] Provider request failed:", { provider, status: error.status || null, message: error.message || "Unknown provider error" });
-      if (!isRetryable(error)) break;
     }
   }
   const hadConfiguredProvider = ["gemini", "groq", "openrouter"].some(p =>

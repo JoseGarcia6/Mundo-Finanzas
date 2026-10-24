@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="description" content="Mundo Finanzas AI: aprende contabilidad y finanzas con recursos interactivos gratuitos.">
+  <meta name="description" content="Mundo Finanzas: aprende contabilidad y finanzas con recursos interactivos gratuitos.">\n  <meta name="ai-api-url" content="">
   <title>Mundo Finanzas AI | Aprende, practica y crece</title>
   <link rel="stylesheet" href="styles.css">
 </head>
@@ -56,17 +56,17 @@
 
     <section class="tutor-section" id="tutor">
       <div class="tutor-intro"><span class="eyebrow">APRENDIZAJE INTERACTIVO</span><h2>Tu tutor de <span>Finanzas</span></h2><p>Pregunta por conceptos contables y recibe explicaciones sencillas, ejemplos y pistas para seguir aprendiendo.</p>
-        <ul class="check-list"><li>Explicaciones en español claro</li><li>Ejemplos con córdobas (C$)</li><li>Disponible sin una API comercial</li></ul>
-        <div class="notice"><b>Transparencia:</b> en esta primera versión, el tutor usa una base educativa programada; no es un modelo generativo conectado a Internet. Más adelante podemos probar IA en el navegador.</div>
+        <ul class="check-list"><li>Explicaciones en español claro</li><li>Ejemplos con córdobas (C$)</li><li>Modo de respaldo siempre disponible</li></ul>
+        <div class="notice"><b>Transparencia:</b> el tutor intenta usar una IA generativa cuando el backend está configurado. Si no está disponible o se agota la cuota, cambia al tutor educativo de respaldo. No introduzcas contraseñas ni datos bancarios.</div>
       </div>
       <div class="chat-window">
-        <div class="chat-header"><div class="bot-avatar">✦</div><div><b>Mundo Finanzas AI</b><small><span class="online-dot"></span> Tutor educativo · versión gratuita</small></div><button id="clearChat" class="clear-chat" title="Limpiar conversación">↻</button></div>
+        <div class="chat-header"><div class="bot-avatar">✦</div><div><b>Mundo Finanzas AI</b><small><span class="online-dot"></span> Tutor híbrido · IA + respaldo</small></div><button id="clearChat" class="clear-chat" title="Limpiar conversación">↻</button></div>
         <div class="chat-messages" id="chatMessages" aria-live="polite">
           <div class="message bot"><div class="message-avatar">✦</div><div class="bubble">¡Hola! 👋 Soy tu tutor de Mundo Finanzas. Preguntame sobre activos, pasivos, patrimonio, presupuesto o inteligencia artificial en la contabilidad.</div></div>
           <div class="quick-prompts"><button data-prompt="¿Qué es un activo?">¿Qué es un activo?</button><button data-prompt="Explícame los pasivos">¿Qué son los pasivos?</button><button data-prompt="¿Cómo calculo la utilidad?">Calcular utilidad</button></div>
         </div>
         <form id="chatForm" class="chat-input"><input id="chatInput" type="text" placeholder="Escribe tu pregunta..." autocomplete="off" aria-label="Escribe tu pregunta"><button type="submit" aria-label="Enviar mensaje">↑</button></form>
-        <p class="chat-footnote">La respuesta se genera en este sitio; no se envía a un servicio de IA externo.</p>
+        <p class="chat-footnote" id="chatFootnote">La IA generativa requiere configurar el backend; el tutor de respaldo siempre está disponible.</p>
       </div>
     </section>
 

@@ -51,7 +51,19 @@ function addMessage(text, who) {
   const row = document.createElement("div"); row.className = `message ${who}`;
   const avatar = document.createElement("div"); avatar.className = "message-avatar"; avatar.textContent = who === "bot" ? "✦" : "Tú";
   const bubble = document.createElement("div"); bubble.className = "bubble"; bubble.textContent = text;
-  row.append(avatar,bubble); $("chatMessages").appendChild(row); $("chatMessages").scrollTop = $("chatMessages").scrollHeight;
+  row.append(avatar,bubble); $("chatMessages").appendChild(row);
+  if (typeof window.renderMathInElement === "function") {
+    window.renderMathInElement(bubble, {
+      delimiters: [
+        {left: "$", right: "$", display: true},
+        {left: "\\[", right: "\\]", display: true},
+        {left: "\\(", right: "\\)", display: false}
+      ],
+      throwOnError: false,
+      strict: "ignore"
+    });
+  }
+  $("chatMessages").scrollTop = $("chatMessages").scrollHeight;
 }
 function sendChat(text) {
   const clean = text.trim(); if (!clean) return;

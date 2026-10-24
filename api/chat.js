@@ -46,13 +46,13 @@ async function mwmblSearch(query) {
       url: String(x.url || x.link || x.href || "").trim(),
       content: String(x.snippet || x.extract || x.description || x.content || x.text || "").trim()
     }))
-    .filter(x => x.title && /^https?:\\/\\//i.test(x.url))
+    .filter(x => x.title && (x.url.startsWith("https://") || x.url.startsWith("http://")) )
     .filter((x, i, all) => all.findIndex(y => y.url === x.url) === i)
     .slice(0, 5);
   if (!results.length) return null;
   return {
-    context: "Resultados de búsqueda web de Mwmbl. Usa solo lo que sea relevante, no inventes datos ni afirmes que una fuente dice algo que no aparece aquí. Los resultados pueden estar incompletos o desactualizados; señala la fecha si importa y recomienda verificar datos financieros en fuentes oficiales.\\n" +
-      results.map((x, i) => "[" + (i + 1) + "] " + x.title + "\\nURL: " + x.url + "\\n" + x.content.slice(0, 1000)).join("\\n\\n"),
+    context: "Resultados de búsqueda web de Mwmbl. Usa solo lo que sea relevante, no inventes datos ni afirmes que una fuente dice algo que no aparece aquí. Los resultados pueden estar incompletos o desactualizados; señala la fecha si importa y recomienda verificar datos financieros en fuentes oficiales.\n" +
+      results.map((x, i) => "[" + (i + 1) + "] " + x.title + "\nURL: " + x.url + "\n" + x.content.slice(0, 1000)).join("\n\n"),
     sources: results.map(x => ({ title: x.title.slice(0, 180), url: x.url }))
   };
 }

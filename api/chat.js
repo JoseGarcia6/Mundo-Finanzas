@@ -117,8 +117,8 @@ async function callOpenAICompatible(provider, messages, webSearch, webContext) {
   return { reply: reply.trim(), sources: [], searched: Boolean(webContext || (isGroq && webSearch && !webContext)) };
 }
 function providerOrder(primary) {
-  const order = [primary, "gemini", "groq", "openrouter"];
-  return [...new Set(order)].filter(p => ["gemini", "groq", "openrouter"].includes(p));
+  const order = [primary, "gemini", "groq"];
+  return [...new Set(order)].filter(p => ["gemini", "groq"].includes(p));
 }
 module.exports = async function handler(req, res) {
   const origin = req.headers.origin || "";
@@ -160,7 +160,7 @@ module.exports = async function handler(req, res) {
     // Skip providers that have no key configured; this makes failover predictable.
     if (provider === "gemini" && !process.env.GEMINI_API_KEY) continue;
     if (provider === "groq" && !process.env.GROQ_API_KEY) continue;
-    if (provider === "openrouter" && !process.env.OPENROUTER_API_KEY) continue;
+    
     try {
       const result = provider === "gemini"
         ? await callGemini(clean, webSearch, webContext)
@@ -173,8 +173,7 @@ module.exports = async function handler(req, res) {
       console.warn("[api/chat] Provider request failed:", { provider, status: error.status || null, message: error.message || "Unknown provider error" });
     }
   }
-  const hadConfiguredProvider = ["gemini", "groq", "openrouter"].some(p =>
-    p === "gemini" ? Boolean(process.env.GEMINI_API_KEY) : p === "groq" ? Boolean(process.env.GROQ_API_KEY) : Boolean(process.env.OPENROUTER_API_KEY));
+  const hadConfiguredProvider = Boolean(process.env.GEMINI_API_KEY || process.env.GROQ_API_KEY);
   if (!hadConfiguredProvider) return json(res, 503, { error: "Configura al menos una clave de IA en las variables de entorno de Vercel." });
   const last = failures[failures.length - 1];
   const status = failures.some(f => f.status === 429) ? 429 : 502;

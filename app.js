@@ -214,10 +214,22 @@ document.querySelectorAll("#mainNav a").forEach(a=>a.addEventListener("click",()
    set("chatFootnote","Tutor generativo conectado. Verifica cálculos y protege tus datos.");
   }catch(e){
    pending.remove();
-   const fallbackMessage="La IA generativa no está disponible en este momento. Te comparto una explicación de respaldo.\n\n"+getTutorAnswer(clean);
-   chatHistory.push({role:"assistant",content:fallbackMessage});
+   console.warn("[Mundo Finanzas] Falló la solicitud al tutor:", {
+    message: e?.message || "Error desconocido",
+    name: e?.name || "Error"
+   });
+   const normalized = clean.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+   let fallback = getTutorAnswer(clean);
+   const previousUser = [...chatHistory].reverse().find(m => m.role === "user" && m.content !== clean);
+   const previousTopic = previousUser?.content.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "") || "";
+   if (/clasific|tipos|cuales son|cuales existen/.test(normalized) && /pasiv|deuda|obligacion/.test(previousTopic)) {
+    fallback = "Los pasivos se suelen clasificar, según el plazo de pago, en:\n\n• Pasivos corrientes o de corto plazo: obligaciones que normalmente vencen dentro de un año, como facturas pendientes con proveedores o cuotas próximas de un préstamo.\n• Pasivos no corrientes o de largo plazo: obligaciones cuyo vencimiento supera un año, como la parte a largo plazo de un préstamo bancario.\n\nEjemplo de una pulpería: si debe C$3,000 a un proveedor para pagar este mes, sería un pasivo corriente; si tiene un préstamo cuyo saldo se pagará durante tres años, la parte que vence después de un año sería pasivo no corriente. La clasificación exacta depende de las condiciones de cada obligación.";
+   } else if (/clasific|tipos|cuales son|cuales existen/.test(normalized) && /activ|recurso|bien/.test(previousTopic)) {
+    fallback = "Los activos suelen clasificarse en:\n\n• Activos corrientes: recursos que se espera convertir en efectivo, vender o consumir en el ciclo normal del negocio o, por lo general, dentro de un año; por ejemplo, caja e inventario de una pulpería.\n• Activos no corrientes: recursos de uso más duradero, como estantes, refrigeradores, mobiliario o vehículos.\n\nLa clasificación ayuda a conocer qué recursos están disponibles a corto plazo y cuáles se utilizan durante más tiempo.";
+   }
+   const fallbackMessage="La IA generativa no está disponible en este momento. Te comparto una explicación de respaldo.\n\n"+fallback;
    addMessage(fallbackMessage,"bot");
-   set("chatFootnote","Modo de respaldo activo. Si el problema continúa, revisaremos la conexión del servidor.");
+   set("chatFootnote","Modo de respaldo activo. La solicitud no se completó; revisaremos el error y podés volver a intentarlo.");
   }finally{
    if(timer)clearTimeout(timer);
   }

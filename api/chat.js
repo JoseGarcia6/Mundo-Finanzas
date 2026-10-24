@@ -87,17 +87,14 @@ async function callGemini(messages, webSearch, webContext) {
     .map(x => x.web ? ({ title: x.web.title || x.web.uri, url: x.web.uri }) : null).filter(Boolean);
   return { reply, sources, searched: sources.length > 0 || Boolean(webContext) };
 }
-async function callOpenAICompatible(provider, messages, webSearch, webContext) {
-  const isGroq = provider === "groq";
-  const key = isGroq ? process.env.GROQ_API_KEY : process.env.OPENROUTER_API_KEY;
-  if (!key) throw new Error("Falta " + (isGroq ? "GROQ_API_KEY" : "OPENROUTER_API_KEY") + " en Vercel.");
-  const url = isGroq ? "https://api.groq.com/openai/v1/chat/completions" : "https://openrouter.ai/api/v1/chat/completions";
-  let model = isGroq ? (process.env.GROQ_MODEL || "openai/gpt-oss-20b") : (process.env.OPENROUTER_MODEL || "openrouter/free");
+async function callGroq(messages, webSearch, webContext) {
+  const key = process.env.GROQ_API_KEY;
+  if (!key) throw new Error("Falta GROQ_API_KEY en Vercel.");
+  let model = process.env.GROQ_MODEL || "openai/gpt-oss-20b";
   const apiMessages = historyForOpenAI(messages);
   if (webContext) apiMessages[0].content += "\n\n" + webContext;
   const body = { model, messages: apiMessages, temperature: 0.5, max_tokens: 900 };
-  if (isGroq && webSearch && !webContext) {
-    // Groq's built-in browser search is available for GPT-OSS models.
+  if (webSearch && !webContext) {
     model = process.env.GROQ_SEARCH_MODEL || "openai/gpt-oss-20b";
     body.model = model;
     body.tools = [{ type: "browser_search" }];
@@ -105,16 +102,16 @@ async function callOpenAICompatible(provider, messages, webSearch, webContext) {
     body.max_completion_tokens = 900;
     delete body.max_tokens;
   }
-  const response = await fetch(url, {
+  const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
     method: "POST",
-    headers: { "Authorization": "Bearer " + key, "Content-Type": "application/json", ...(isGroq ? {} : { "HTTP-Referer": process.env.SITE_URL || "https://josegarcia6.github.io/Mundo-Finanzas/", "X-Title": "Mundo Finanzas" }) },
+    headers: { "Authorization": "Bearer " + key, "Content-Type": "application/json" },
     body: JSON.stringify(body)
   });
   const data = await response.json().catch(() => ({}));
-  if (!response.ok) { const err = new Error(data.error?.message || "Error del proveedor " + provider + "."); err.status = response.status; throw err; }
+  if (!response.ok) { const err = new Error(data.error?.message || "Error del proveedor Groq."); err.status = response.status; throw err; }
   const reply = data.choices?.[0]?.message?.content;
   if (typeof reply !== "string" || !reply.trim()) throw new Error("La IA no devolvió texto. Intenta otra vez.");
-  return { reply: reply.trim(), sources: [], searched: Boolean(webContext || (isGroq && webSearch && !webContext)) };
+  return { reply: reply.trim(), sources: [], searched: Boolean(webContext || (webSearch && !webContext)) };
 }
 function providerOrder(primary) {
   const order = [primary, "gemini", "groq"];
@@ -143,7 +140,7 @@ module.exports = async function handler(req, res) {
   }
   if (clean[clean.length - 1].role !== "user") return json(res, 400, { error: "El último mensaje debe ser del usuario." });
   const primary = (process.env.AI_PROVIDER || "gemini").toLowerCase();
-  if (!["gemini", "groq", "openrouter"].includes(primary)) return json(res, 500, { error: "AI_PROVIDER debe ser gemini, groq u openrouter." });
+  if (!["gemini", "groq"].includes(primary)) return json(res, 500, { error: "AI_PROVIDER debe ser gemini o groq." });
   const webSearch = needsWebSearch(clean);
   let webContext = null;
   let webSources = [];
@@ -164,7 +161,7 @@ module.exports = async function handler(req, res) {
     try {
       const result = provider === "gemini"
         ? await callGemini(clean, webSearch, webContext)
-        : await callOpenAICompatible(provider, clean, webSearch, webContext);
+        : await callGroq(clean, webSearch, webContext);
       const sources = [...(result.sources || []), ...webSources].filter((s, i, all) => s.url && all.findIndex(x => x.url === s.url) === i).slice(0, 5);
       const reply = result.reply + formatSources(sources);
       return json(res, 200, { reply, provider, searched: Boolean(result.searched || webSearch && webSources.length), sources });

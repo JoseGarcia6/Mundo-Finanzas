@@ -183,6 +183,33 @@ document.querySelectorAll("#mainNav a").forEach(a=>a.addEventListener("click",()
  const configuredApi=document.querySelector('meta[name="ai-api-url"]')?.content?.trim();
  const api=configuredApi||(location.hostname.endsWith(".vercel.app")?"/api/chat":"");
  const chatHistory=[];
+
+ function buildBudgetAnswer(prompt){
+  const asksRule=/50\s*%[\s\S]*30\s*%[\s\S]*20\s*%|50\s*\/\s*30\s*\/\s*20/i.test(prompt);
+  const asksYear=/12\s*mes(?:es)?|un año|un anio/i.test(prompt);
+  const salaryMatch=prompt.match(/salario(?:\s+mensual)?(?:\s+de)?\s*(?:C\s*\$?\s*)?([\d,]+(?:\.\d{1,2})?)/i)||prompt.match(/C\s*\$\s*([\d,]+(?:\.\d{1,2})?)/i);
+  if(!asksRule||!asksYear||!salaryMatch)return null;
+  const income=Number(salaryMatch[1].replace(/,/g,""));
+  if(!Number.isFinite(income)||income<=0)return null;
+  const fmt=n=>new Intl.NumberFormat("es-NI",{minimumFractionDigits:2,maximumFractionDigits:2}).format(n);
+  const needs=income*.5, personal=income*.3, savings=income*.2;
+  const rows=Array.from({length:12},(_,i)=>"| "+(i+1)+" | C$ "+fmt(savings)+" | C$ "+fmt(savings*(i+1))+" |").join("\n");
+  return "### Distribución mensual del salario\n\n"+
+   "- **Necesidades (50 %):** C$ "+fmt(needs)+"\n"+
+   "- **Gastos personales (30 %):** C$ "+fmt(personal)+"\n"+
+   "- **Ahorro (20 %):** C$ "+fmt(savings)+"\n\n"+
+   "### Tabla resumen\n\n"+
+   "| Categoría | Porcentaje | Monto mensual |\n|---|---:|---:|\n"+
+   "| Necesidades | 50 % | C$ "+fmt(needs)+" |\n"+
+   "| Gastos personales | 30 % | C$ "+fmt(personal)+" |\n"+
+   "| Ahorro | 20 % | C$ "+fmt(savings)+" |\n"+
+   "| **Total** | **100 %** | **C$ "+fmt(income)+" |\n\n"+
+   "### Proyección del ahorro durante 12 meses\n\n"+
+   "| Mes | Ahorro del mes | Ahorro acumulado |\n|---:|---:|---:|\n"+rows+"\n\n"+
+   "**Ahorro acumulado al finalizar los 12 meses: C$ "+fmt(savings*12)+".**\n\n"+
+   "La proyección supone que apartás el mismo monto cada mes, sin retiros ni intereses.";
+ }
+
  function addAssistantMessage(text,sources,meta){
   const row=document.createElement("div");row.className="message bot";
   const avatar=document.createElement("div");avatar.className="message-avatar";avatar.textContent="✦";
@@ -249,6 +276,8 @@ document.querySelectorAll("#mainNav a").forEach(a=>a.addEventListener("click",()
   if(!clean)return;
   document.querySelector(".quick-prompts")?.remove();
   addMessage(clean,"user");
+  const budgetAnswer=buildBudgetAnswer(clean);
+  if(budgetAnswer){chatHistory.push({role:"user",content:clean},{role:"assistant",content:budgetAnswer});addAssistantMessage(budgetAnswer,[],{searchStatus:"not_requested"});set("chatFootnote","Presupuesto calculado automáticamente; revisa los montos antes de tomar decisiones.");return;}
   if(!api){addMessage(getTutorAnswer(clean),"bot");return;}
   chatHistory.push({role:"user",content:clean});
   const pending=document.createElement("div");
